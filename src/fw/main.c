@@ -226,6 +226,9 @@ int main(void) {
 #ifdef RECOVERY_FW
   boot_bit_clear(BOOT_BIT_RECOVERY_START_IN_PROGRESS);
 #endif
+#ifdef BOARD_NRF_DK
+  boot_bit_clear(BOOT_BIT_FW_START_FAIL_STRIKE_TWO);
+#endif
 
   extern uint32_t __kernel_main_stack_start__[];
   extern uint32_t __kernel_main_stack_size__[];
@@ -425,7 +428,7 @@ static NOINLINE void prv_main_task_init(void) {
   // give us time to initialize everything without worrying about task watchdog
   // from firing if we block other tasks.
   task_watchdog_init();
-  task_watchdog_pause(30);
+  task_watchdog_pause(90);
 
   analytics_init();
   register_system_timers();

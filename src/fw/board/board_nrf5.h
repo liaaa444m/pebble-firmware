@@ -291,6 +291,16 @@ typedef struct {
   const NrfLowPowerPWM extcomin;
 } BoardConfigSharpDisplay;
 
+typedef struct {
+  nrfx_spim_t spi;
+
+  const OutputConfig mosi;
+  const OutputConfig clk;
+  const OutputConfig cs;
+  const OutputConfig dc; //this is unique to the gc9a01
+  const OutputConfig rst; //this is also unique to the gc9a01
+} BoardConfigGC9A01Display;
+
 typedef const struct DMARequest DMARequest;
 typedef const struct UARTDevice UARTDevice;
 typedef const struct SPIBus SPIBus;

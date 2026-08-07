@@ -57,6 +57,7 @@ def main():
 
     interface = pulse2.Interface.open_dbgserial(url=args.tty)
     link = interface.get_link()
+    print(link)
     flash_imaging = commander.apps.FlashImaging(link)
     connection = FakeCommander(flash_imaging)
 

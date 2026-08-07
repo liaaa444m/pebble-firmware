@@ -43,6 +43,11 @@ def build(bld):
                 excludes.append('common/legacy/*registry*.c')
                 excludes.append('common/compositor/default/compositor_modal_transitions.*')
                 excludes.append('common/battery/voltage/**')
+            elif bld.is_nrf_dk():
+                excludes.append('common/legacy/*registry*.c')
+                excludes.append('common/compositor/legacy/compositor_modal_slide_transitions.*')
+                excludes.append('common/battery/nrf_fuel_gauge/**')
+
             elif bld.is_obelix():
                 excludes.append('common/legacy/*registry*.c')
                 excludes.append('common/compositor/legacy/compositor_modal_slide_transitions.*')
@@ -72,6 +77,7 @@ def build(bld):
             if not bld.capability('HAS_MICROPHONE'):
                 excludes.append('normal/voice/**')
 
+            print(excludes);
             return excludes
 
         excludes = _get_excludes(bld)

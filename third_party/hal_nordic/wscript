@@ -1,7 +1,7 @@
 def configure(conf):
     if conf.env.MICRO_FAMILY == 'NRF52840':
         conf.env.append_unique('DEFINES', 'NRF52840_XXAA')
-    if conf.is_asterix():
+    if conf.is_asterix() or conf.is_nrf_dk():
         conf.env.append_unique('DEFINES', 'NRF_CONFIG_NFCT_PINS_AS_GPIOS')
         conf.env.append_unique('DEFINES', 'CONFIG_GPIO_AS_PINRESET')
         conf.env.append_unique('DEFINES', 'NRFX_I2S_ENABLED=1')
@@ -41,6 +41,9 @@ def build(bld):
         if bld.is_asterix():
             # is there a better way to do this?
             micro_includes += ['../../src/fw/board/boards/board_asterix']
+        if bld.is_nrf_dk():
+            # is there a better way to do this?
+            micro_includes += ['../../src/fw/board/boards/board_nrf_dk']
         else:
             bld.fatal("no board for nRF5 includes")
 

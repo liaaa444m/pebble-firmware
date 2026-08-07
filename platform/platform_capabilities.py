@@ -352,6 +352,42 @@ board_capability_dicts = [
             'HAS_PBLBOOT',
             'HAS_DYNAMIC_BACKLIGHT',
         },
+
+        'boards': [ 'nucleo' ],
+        'capabilities':
+        { 
+            # NOTE: it would be REALLY nice to be able to get all of these capabilities up and running, but for now, this is nucleo's capabilities.
+            # NOTE: I wasn't expecting to actually get my hands on the nRF52840 DK so soon, so a lot of the references to nucleo are gonna go totally unused.
+            # I'm still glad I bothered with this though because now I know what to change to add a new board to the FW.
+
+            #'HAS_ACCESSORY_CONNECTOR',
+            'HAS_APP_GLANCES',
+            #'HAS_BUILTIN_HRM',
+            #'HAS_HEALTH_TRACKING',
+            #'HAS_JAVASCRIPT',
+            'HAS_LAUNCHER4',
+            #'HAS_PMIC',
+            'HAS_SDK_SHELL4',
+            #'HAS_SPRF_V3',
+            #'HAS_TEMPERATURE',
+            #'HAS_TIMELINE_PEEK',
+            #'HAS_VIBE_SCORES',
+            #'HAS_WEATHER',
+            #'HAS_PUTBYTES_PREACKING'
+        },
+        'boards': ['nrf_dk'],
+        'capabilities':
+        {
+            'HAS_APP_GLANCES',
+            'HAS_LAUNCHER4',
+            'HAS_SDK_SHELL4',
+            'HAS_VIBE_SCORES',
+            'HAS_SPRF_V3',
+            'HAS_FLASH_OTP',
+            'HAS_HEALTH_TRACKING',
+            'HAS_VIBE_DRV2604',
+        },
+
     },
 ]
 

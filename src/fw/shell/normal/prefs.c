@@ -227,7 +227,7 @@ static uint8_t s_legacy_app_render_mode = 0; // Default to bezel mode
 static GColor s_settings_menu_highlight_color = GColorCobaltBlue;
 static GColor s_apps_menu_highlight_color = GColorVividCerulean;
 
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX || PLATFORM_NRF_DK
 #define PREF_KEY_BLUETOOTH_LEGACY_COMPAT "bluetoothLegacyCompat"
 static bool s_bluetooth_legacy_compat = false;
 #endif
@@ -583,7 +583,7 @@ static bool prv_set_s_coredump_on_request_enabled(bool *enabled) {
   return true;
 }
 
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX || PLATFORM_NRF_DK
 static bool prv_set_s_bluetooth_legacy_compat(bool *enabled) {
   s_bluetooth_legacy_compat = *enabled;
   if (gap_le_slave_is_discoverable()) {
@@ -1582,7 +1582,7 @@ void shell_prefs_set_apps_menu_highlight_color(GColor color) {
   prv_pref_set(PREF_KEY_APPS_MENU_HIGHLIGHT_COLOR, &color, sizeof(GColor));
 }
 
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX || PLATFORM_NRF_DK
 bool shell_prefs_bluetooth_legacy_compat(void) {
   return s_bluetooth_legacy_compat;
 }

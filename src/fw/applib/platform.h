@@ -19,7 +19,7 @@ typedef enum PlatformType {
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeAplite
   #elif PLATFORM_SNOWY
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeBasalt
-  #elif PLATFORM_SPALDING
+  #elif PLATFORM_SPALDING || PLATFORM_NUCLEO || PLATFORM_NRF_DK
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeChalk
   #elif PLATFORM_SILK
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeDiorite

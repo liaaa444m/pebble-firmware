@@ -39,6 +39,9 @@ roundrect.h
 log.txt
 openocd.cfg
 .DS_Store
+.clang-format
+.clangd
+.cache
 tools/bitmaps/*.h
 tools/bitmaps/*.pbi
 

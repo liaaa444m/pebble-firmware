@@ -68,7 +68,7 @@ enum {
 #if PLATFORM_ASTERIX || PLATFORM_OBELIX
   DebuggingItemMotionSensitivity,
 #endif
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX || PLATFORM_NRF_DK
   DebuggingItemBluetoothLegacy,
 #endif
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
@@ -589,7 +589,7 @@ static const char* s_debugging_titles[DebuggingItem_Count] = {
 #if PLATFORM_ASTERIX || PLATFORM_OBELIX
   [DebuggingItemMotionSensitivity] = i18n_noop("Motion Sensitivity"),
 #endif
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX || PLATFORM_NRF_DK
   [DebuggingItemBluetoothLegacy]  = i18n_noop("BLE compat mode"),
 #endif
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
@@ -627,7 +627,7 @@ static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_lay
     subtitle_text = i18n_get(s_motion_sensitivity_labels[prv_motion_sensitivity_get_selection_index()], data);
   }
 #endif
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX || PLATFORM_NRF_DK
   else if (cell_index->row == DebuggingItemBluetoothLegacy) {
     subtitle_text = shell_prefs_bluetooth_legacy_compat() ? i18n_get("Emulate silk", data) : i18n_get("Disabled", data);
   }
@@ -682,7 +682,7 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer,
       prv_motion_sensitivity_menu_push(data);
       break;
 #endif
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX || PLATFORM_NRF_DK
     case DebuggingItemBluetoothLegacy:
       shell_prefs_set_bluetooth_legacy_compat(!shell_prefs_bluetooth_legacy_compat());
       break;

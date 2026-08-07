@@ -52,6 +52,7 @@ RUNNERS = {
     'robert_evt': ['openocd'],
     'robert_es': ['openocd'],
     'asterix': ['openocd', 'nrfutil'],
+    'nrf_dk': ['openocd', 'nrfutil'],
     'obelix_evt': ['sftool'],
     'obelix_dvt': ['sftool'],
     'obelix_pvt': ['sftool'],
@@ -118,12 +119,13 @@ def options(opt):
                              'robert_evt',
                              'robert_es',
                              'asterix',
+                             'nrf_dk',
                              'obelix_evt',
                              'obelix_dvt',
                              'obelix_pvt',
                              'obelix_bb',
                              'obelix_bb2',
-                            ],
+                             'nucleo',],
                    help='Which board we are targeting '
                         'bb2, snowy_dvt, spalding, silk...')
     opt.add_option('--runner', default=None, choices=['openocd', 'sftool', 'nrfutil'],
@@ -502,7 +504,7 @@ def configure(conf):
     if conf.is_tintin():
         conf.env.PLATFORM_NAME = 'aplite'
         conf.env.MIN_SDK_VERSION = 2
-    elif conf.is_spalding():
+    elif conf.is_spalding() or conf.is_nucleo() or conf.is_nrf_dk():
         conf.env.PLATFORM_NAME = 'chalk'
         conf.env.MIN_SDK_VERSION = 3
     elif conf.options.board == 'snowy_emery':
@@ -528,11 +530,11 @@ def configure(conf):
 
     if conf.is_tintin():
         conf.env.MICRO_FAMILY = 'STM32F2'
-    elif conf.is_snowy_compatible() or conf.is_silk():
+    elif conf.is_snowy_compatible() or conf.is_silk() or conf.is_nucleo():
         conf.env.MICRO_FAMILY = 'STM32F4'
     elif conf.is_cutts() or conf.is_robert():
         conf.env.MICRO_FAMILY = 'STM32F7'
-    elif conf.is_asterix():
+    elif conf.is_asterix() or conf.is_nrf_dk():
         conf.env.MICRO_FAMILY = 'NRF52840'
     elif conf.is_obelix():
         conf.env.MICRO_FAMILY = 'SF32LB52'
@@ -581,7 +583,7 @@ def configure(conf):
     elif conf.is_tintin() or conf.is_snowy() or conf.is_spalding():
         conf.env.bt_controller = 'cc2564x'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_CC2564X'])
-    elif conf.is_asterix():
+    elif conf.is_asterix() or conf.is_nrf_dk:
         conf.env.bt_controller = 'nrf52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF52'])
     elif bt_board in ('silk_bb2', 'silk', 'robert_bb2', 'robert_evt'):
@@ -1175,7 +1177,6 @@ def _create_qemu_image_micro(ctx, path_to_firmware_hex):
                   .format(ctx.env.BOARD))
 
     micro_flash_node = ctx.path.get_bld().make_node('qemu_micro_flash.bin')
-    micro_flash_path = micro_flash_node.path_from(ctx.path)
     waflib.Logs.pprint('CYAN', 'Writing micro flash image to {}'.format(micro_flash_path))
 
     img = IntelHex(ctx.env.BOOTLOADER_HEX)

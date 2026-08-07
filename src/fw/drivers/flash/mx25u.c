@@ -13,6 +13,7 @@
 
 #define STM32F4_COMPATIBLE
 #define STM32F7_COMPATIBLE
+#define NRF5_COMPATIBLE
 #include <mcu.h>
 
 static QSPIFlashPart QSPI_FLASH_PART = {
@@ -197,6 +198,16 @@ status_t flash_impl_blank_check_sector(FlashAddress addr) {
 }
 status_t flash_impl_blank_check_subsector(FlashAddress addr) {
   return qspi_flash_blank_check(QSPI_FLASH, addr, true /* is_subsector */);
+}
+// NOTE: I am taking this code from other flash drivers just so the fw can compile. I hope this doesn't break shit.
+status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val) {
+  return qspi_flash_read_security_register(QSPI_FLASH, addr, val);
+}
+status_t flash_impl_security_register_is_locked(uint32_t address, bool *locked) {
+  return qspi_flash_security_register_is_locked(QSPI_FLASH, address, locked);
+}
+const FlashSecurityRegisters *flash_impl_security_registers_info(void) {
+  return qspi_flash_security_registers_info(QSPI_FLASH);
 }
 
 uint32_t flash_impl_get_typical_sector_erase_duration_ms(void) { return 400; }

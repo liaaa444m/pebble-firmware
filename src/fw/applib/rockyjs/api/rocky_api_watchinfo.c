@@ -55,7 +55,7 @@ static jerry_value_t prv_get_platform_name(void) {
 #  define SNOWY_MODEL(model_str) NULL
 #endif // PLATFORM_SNOWY
 
-#if PLATFORM_SPALDING
+#if PLATFORM_SPALDING || PLATFORM_NRF_DK
 #  define SPALDING_MODEL(model_str) model_str
 #else
 #  define SPALDING_MODEL(model_str) NULL

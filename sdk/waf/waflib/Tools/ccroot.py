@@ -747,6 +747,7 @@ def process_lib(self):
 			continue
 		break
 	else:
+		print("fuck")
 		raise Errors.WafError('could not find library %r' % self.name)
 	self.link_task = self.create_task('fake_%s' % self.lib_type, [], [node])
 	self.target = self.name

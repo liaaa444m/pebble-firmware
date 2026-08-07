@@ -203,6 +203,33 @@ elif bld.is_asterix():
             'driver_vibe',
         ],
     )
+elif bld.is_nrf_dk():
+    bld(
+        name='drivers',
+        use=[
+            'driver_ambient_light',
+            'driver_backlight',
+            'driver_battery',
+            'driver_button',
+            'driver_display',
+            'driver_flash',
+            'driver_gpio_defaults',
+            'driver_imu',
+            'driver_mcu',
+            'driver_mic',
+            'driver_mpu',
+            'driver_nrf5_hfxo',
+            'driver_otp',
+            'driver_periph_config',
+            'driver_pwr',
+            'driver_rng',
+            'driver_rtc',
+            'driver_task_watchdog',
+            'driver_temperature',
+            'driver_uart',
+            'driver_vibe',
+        ],
+    )
 
 elif bld.is_obelix():
     bld(
@@ -312,6 +339,16 @@ elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'root_includes',
             'stm32_stdlib',
         ],
+    )
+elif bld.is_nrf_dk():
+    bld.objects(
+        name='driver_ambient_light',
+        source=[
+            'stubs/ambient_light.c'
+        ],
+        use=[
+            'fw_includes',
+        ]
     )
 
 if mcu_family in ('STM32F4', 'STM32F7'):
@@ -439,6 +476,22 @@ elif bld.is_asterix() or bld.is_obelix():
             'root_includes',
         ],
     )
+elif bld.is_nrf_dk():
+    bld.objects(
+        name='driver_battery',
+        source=[
+            'battery/battery_common.c',
+            'battery/battery_adc_conversion.c',
+            #'battery/battery_voltage_monitor.c',
+            'stubs/battery.c',
+            # PMIC provides this implementation
+        ],
+        use=[
+            'fw_includes',
+            #'root_includes',
+        ],
+    )
+
 else:
     bld.objects(
         name='driver_battery',
@@ -486,7 +539,7 @@ if bld.is_silk() and not bld.env.QEMU:
         ],
     )
 
-if bld.is_asterix() or bld.is_obelix_evt() or bld.is_obelix_bb():
+if bld.is_asterix() or bld.is_obelix_evt() or bld.is_obelix_bb() or bld.is_nrf_dk():
     bld.objects(
         name='driver_lsm6dso',
         source=[
@@ -617,6 +670,21 @@ elif bld.is_asterix():
         name='driver_display',
         source=[
             'display/sharp_ls013b7dh01/sharp_ls013b7dh01_nrf5.c',
+        ],
+        use=[
+            'driver_gpio',
+            'freertos',
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
+        ],
+    )
+elif bld.is_nrf_dk():
+    # FIXME: driver should use platform agnostic SPI interface
+    bld.objects(
+        name='driver_display',
+        source=[
+            'display/gc9a01/gc9a01_nrf5.c',
         ],
         use=[
             'driver_gpio',
@@ -787,6 +855,23 @@ elif bld.is_asterix():
             'flash/flash_erase.c',
             'flash/cd_flash_driver.c',
             'flash/gd25lq255e.c',
+        ],
+        use=[
+            'driver_qspi',
+            'freertos',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+elif bld.is_nrf_dk():
+    bld.objects(
+        name='driver_flash',
+        source=[
+            'flash/flash_api.c',
+            'flash/flash_crc.c',
+            'flash/flash_erase.c',
+            'flash/cd_flash_driver.c',
+            'flash/mx25u.c',
         ],
         use=[
             'driver_qspi',
@@ -1054,7 +1139,7 @@ elif bld.is_silk():
             'root_includes',
         ],
     )
-elif bld.is_asterix():
+elif bld.is_asterix() or bld.is_nrf_dk():
     bld.objects(
         name='driver_imu',
         source=[
@@ -1164,7 +1249,7 @@ if bld.is_tintin() or bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robe
         ],
     )
 
-if bld.is_asterix() or bld.is_obelix():
+if bld.is_asterix() or bld.is_obelix() or bld.is_nrf_dk():
     bld.objects(
         name='driver_mmc5603nj',
         source=[
@@ -1259,7 +1344,7 @@ elif bld.is_silk() or bld.is_cutts() or bld.is_robert():
             'stm32_stdlib',
         ],
     )
-elif bld.is_asterix():
+elif bld.is_asterix() or bld.is_nrf_dk():
     bld.objects(
         name='driver_mic',
         source=[

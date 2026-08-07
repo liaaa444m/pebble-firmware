@@ -8,7 +8,7 @@
 #if SCREEN_COLOR_DEPTH_BITS == 8
 #include "applib/graphics/8_bit/framebuffer.h"
 #else
-#include "applib/graphics/1_bit/framebuffer.h"
+#include "applib/graphics/8_bit/framebuffer.h"
 #endif
 
 #include <stdint.h>

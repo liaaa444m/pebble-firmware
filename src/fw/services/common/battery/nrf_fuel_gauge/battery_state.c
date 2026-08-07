@@ -27,7 +27,7 @@
 #define LOG_MIN_SEC 30
 
 static const struct battery_model prv_battery_model = {
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX || PLATFORM_NRF_DK
 #include "battery_asterix.inc"
 #elif PLATFORM_OBELIX
 #include "battery_obelix.inc"

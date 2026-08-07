@@ -76,6 +76,11 @@ typedef struct {
 #include "displays/display_robert.h"
 #elif BOARD_ROBERT_EVT
 #include "displays/display_robert_evt.h"
+#elif BOARD_NUCLEO
+// NOTE: It might work. It might not. You should still try not to do this though.
+#include "displays/display_spalding.h"
+#elif BOARD_NRF_DK
+#include "displays/display_nrf_dk.h"
 #else
 #error "Unknown display definition for board"
 #endif // BOARD_*

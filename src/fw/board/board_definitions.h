@@ -54,6 +54,10 @@
 #include "boards/board_asterix.h"
 #elif BOARD_OBELIX_EVT || BOARD_OBELIX_DVT || BOARD_OBELIX_PVT || BOARD_OBELIX_BB || BOARD_OBELIX_BB2
 #include "boards/board_obelix.h"
+#elif BOARD_NUCLEO
+#include "boards/board_nucleo.h" // stm32f446re nucleo testbed for Peridot
+#elif BOARD_NRF_DK
+#include "boards/board_nrf_dk.h"
 #else
 #error "Unknown board definition"
 #endif

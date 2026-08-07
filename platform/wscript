@@ -42,7 +42,13 @@ def is_robert(ctx):
 @conf
 def is_asterix(ctx):
     return ctx.get_board().startswith('asterix')
+@conf
+def is_nucleo(ctx):
+    return ctx.get_board().startswith('nucleo')
 
+@conf
+def is_nrf_dk(ctx):
+    return ctx.get_board().startswith('nrf_dk');
 @conf
 def is_obelix(ctx):
     return ctx.get_board().startswith('obelix')
@@ -87,6 +93,10 @@ def get_platform_name(ctx):
         return "asterix"
     elif is_obelix(ctx):
         return "obelix"
+    elif is_nucleo(ctx):
+        return "nucleo"
+    elif is_nrf_dk(ctx):
+        return "nrf_dk"
     else:
         return "unknown"
 
@@ -177,6 +187,10 @@ def has_touch(ctx):
         return False
     elif is_obelix(ctx):
         return True
+    elif is_nucleo(ctx):
+        return False
+    elif is_nrf_dk(ctx):
+        return False
     else:
         return None
 
@@ -233,8 +247,14 @@ def add_platform_defines(ctx, env):
     elif ctx.is_obelix():
         bit_depth = 8
         platform = 'OBELIX'
+    elif ctx.is_nucleo():
+        bit_depth = 8
+        platform = 'NUCLEO'
+    elif ctx.is_nrf_dk():
+        bit_depth = 8;
+        platform = 'NRF_DK'
     else:
-        ctx.fatal('No platform specified for {}!'.format(ctx.options.board))
+        ctx.fatal('No platform specified for {}! bruh'.format(ctx.options.board))
 
     env.append_value(
         'DEFINES', ['USE_STDPERIPH_DRIVER=1',

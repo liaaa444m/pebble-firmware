@@ -99,6 +99,18 @@ elif board in ('asterix'):
             'drivers',
         ],
     )
+elif board in ('nrf_dk'):
+    bld.objects(
+        name='board',
+        source=[
+            'boards/board_nrf_dk.c',
+        ],
+        use=[
+            'fw_includes',
+            'freertos',
+            'drivers',
+        ],
+    )
 elif board in ('obelix_evt', 'obelix_dvt', 'obelix_pvt', 'obelix_bb', 'obelix_bb2'):
     bld.objects(
         name='board',
@@ -110,6 +122,17 @@ elif board in ('obelix_evt', 'obelix_dvt', 'obelix_pvt', 'obelix_bb', 'obelix_bb
             'freertos',
             'drivers',
         ],
+    ) 
+elif board in ('nucleo',):
+    bld.objects(
+        name='board',
+        source=[
+            'boards/board_nucleo.c',
+        ],
+        use=[
+            'fw_includes',
+            'drivers',
+        ]
     )
 else:
     bld.fatal('src/fw/board/wscript_build: '
