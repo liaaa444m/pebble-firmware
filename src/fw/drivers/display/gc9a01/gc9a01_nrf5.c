@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "drivers/display/display.h"
 #include "gc9a01.h"
 
 #include <stdbool.h>
@@ -29,8 +30,10 @@
 #define DISP_MODE_WRITE 0x2CU
 #define DISP_MODE_CLEAR 0x04U
 
-static uint8_t s_buf[2 + ((DISP_LINE_BYTES + 2) * PBL_DISPLAY_HEIGHT)];
+static uint8_t s_buf[((DISP_LINE_BYTES*3/2))];
+static bool s_updating_single_byte;
 static bool s_updating;
+static NextRowCallback s_nrcb;
 static UpdateCompleteCallback s_uccb;
 static SemaphoreHandle_t s_sem;
 
@@ -332,9 +335,39 @@ static void prv_gc9a01_init(void) {
   vTaskDelay(pdMS_TO_TICKS(20));
   GC9A01_write_command(0x53);
   GC9A01_write_byte(0x2C);
+  GC9A01_write_command(0x2C);
+  for (int i = 0; i < 240*240*12/8; i++){
+    GC9A01_write_byte(0x00);
+  }
   GC9A01_write_command(0x29);
+
+  //set frame to 180x180. I know this isn't Pebble-compliant code but hey, this is my repo i do whatever i want
+  uint8_t data[4];
+
+  GC9A01_write_command(0x2a);
+  data[0] = (30 >> 8) & 0xFF;
+  data[1] = 30 & 0xFF;
+  data[2] = (209 >> 8) & 0xFF;
+  data[3] = 209 & 0xFF;
+  for (int i=0;i<4;i++){
+    GC9A01_write_byte(data[i]);
+  }
+
+  GC9A01_write_command(0x2b);
+
+  for (int i=0;i<4;i++){
+    GC9A01_write_byte(data[i]);
+  }
 }
 
+static void prv_terminate_single_transfer(void *data) {
+  s_updating_single_byte = false;
+
+  prv_disable_chip_select();
+  prv_disable_spim();
+
+  //s_uccb();
+}
 static void prv_terminate_transfer(void *data) {
   s_updating = false;
 
@@ -344,15 +377,58 @@ static void prv_terminate_transfer(void *data) {
   s_uccb();
 }
 
+static void prv_transfer_next_row(void *data){
+  DisplayRow row;
+  uint8_t *pbuf = s_buf;
+  nrfx_spim_xfer_desc_t desc = {.p_tx_buffer = pbuf};
+  if (!s_nrcb(&row)){
+    prv_terminate_transfer(NULL);
+    return;
+  }
+  const GBitmapDataRowInfoInternal *row_infos = g_gbitmap_spalding_data_row_infos;
+  for (int i = 0; i < DISP_LINE_BYTES; i++) {
+    uint8_t r,g,b;
+    if (i < row_infos[row.address].min_x || i > row_infos[row.address].max_x) {
+      r = 0;
+      g = 0;
+      b = 0;
+    } else {
+      r = (row.data[i] >> 4) & 0b11;
+      g = (row.data[i] >> 2) & 0b11;
+      b = (row.data[i]) & 0b11;
+    }
+    if (i % 2 == 0){
+      *pbuf++ = (r << 6) | (r << 4) | (g << 2) | g;
+      *pbuf = (b << 6) | (b << 4);
+    } else {
+      *pbuf++ |= (r << 2) | r;
+      *pbuf++ = (g << 6) | (g << 4) | (b << 2) | b;
+    }
+  }
+  desc.tx_length = DISP_LINE_BYTES * 3 / 2;
+  nrfx_err_t err = nrfx_spim_xfer(&BOARD_CONFIG_DISPLAY.spi, &desc, 0);
+  PBL_ASSERTN(err == NRFX_SUCCESS);
+}
+
 static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx) {
   portBASE_TYPE woken = pdFALSE;
 
-  if (s_updating) {
+  if (s_updating_single_byte) {
     PebbleEvent e = {
         .type = PEBBLE_CALLBACK_EVENT,
         .callback =
             {
-                .callback = prv_terminate_transfer,
+                .callback = prv_terminate_single_transfer,
+            },
+    };
+
+    woken = event_put_isr(&e) ? pdTRUE : pdFALSE;
+  } else if (s_updating) {
+    PebbleEvent e = {
+        .type = PEBBLE_CALLBACK_EVENT,
+        .callback =
+            {
+                .callback = prv_transfer_next_row,
             },
     };
 
@@ -394,43 +470,17 @@ void display_set_rotated(bool rotated) {
 }
 
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
-  DisplayRow row;
-  uint8_t *pbuf = s_buf;
-  nrfx_spim_xfer_desc_t desc = {.p_tx_buffer = pbuf};
-
   PBL_ASSERTN(!s_updating);
+  s_uccb = uccb;
+  s_nrcb = nrcb;
 
   // write command (write)
-  *pbuf++ = DISP_MODE_WRITE;
-  desc.tx_length++;
-
-  while (nrcb(&row)) {
-    // write row address, data and trailing dummy
-    *pbuf++ = s_rotated_180 ? (PBL_DISPLAY_HEIGHT - 1) - row.address + 1 : row.address + 1;
-    if (s_rotated_180) {
-      for (int i = DISP_LINE_BYTES - 1; i >= 0; --i) {
-        *pbuf++ = reverse_byte(row.data[i]);
-      }
-    } else {
-      memcpy(pbuf, row.data, DISP_LINE_BYTES);
-      pbuf += DISP_LINE_BYTES;
-    }
-    *pbuf++ = 0x00;
-    desc.tx_length += DISP_LINE_BYTES + 2;
-  }
-
-  // write last trailing dummy
-  *pbuf++ = 0x00;
-  desc.tx_length++;
-
+  GC9A01_write_command(DISP_MODE_WRITE);
+  s_updating = true;
   prv_enable_spim();
   prv_enable_chip_select();
-
-  s_uccb = uccb;
-  s_updating = true;
-
-  nrfx_err_t err = nrfx_spim_xfer(&BOARD_CONFIG_DISPLAY.spi, &desc, 0);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
+  prv_select_data_mode(); 
+  prv_transfer_next_row(NULL);
 }
 
 bool display_update_in_progress(void) {
