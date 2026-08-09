@@ -203,6 +203,17 @@ status_t flash_impl_blank_check_subsector(FlashAddress addr) {
 status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val) {
   return qspi_flash_read_security_register(QSPI_FLASH, addr, val);
 }
+status_t flash_impl_erase_security_register(uint32_t addr) {
+  return qspi_flash_erase_security_register(QSPI_FLASH, addr);
+}
+status_t flash_impl_write_security_register(uint32_t addr, uint8_t val) {
+  return qspi_flash_write_security_register(QSPI_FLASH, addr, val);
+}
+#ifdef RECOVERY_FW
+status_t flash_impl_lock_security_register(uint32_t address) {
+  return qspi_flash_lock_security_register(QSPI_FLASH, address);
+}
+#endif
 status_t flash_impl_security_register_is_locked(uint32_t address, bool *locked) {
   return qspi_flash_security_register_is_locked(QSPI_FLASH, address, locked);
 }

@@ -312,7 +312,7 @@ uint16_t battery_state_get_voltage(void) {
   return s_last_battery_state.voltage;
 }
 
-int32_t battery_state_get_temp(void) {
+int32_t battery_state_get_temperature(void) {
   return 0;
 }
 

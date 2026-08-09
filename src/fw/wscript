@@ -511,9 +511,9 @@ def _get_mfg_paths(bld):
     elif bld.is_nucleo():
         # This thing isn't supposed to enter manufacturing in any way, shape, or form, so im just gonna put in spalding here and hope for the best
         return ('mfg/spalding')
-    elif bld.is_nrf_dk():
+    #elif bld.is_nrf_dk():
         # This thing isn't supposed to enter manufacturing in any way, shape, or form, so im just gonna put in spalding here and hope for the best
-        return ('mfg/spalding')
+     #   return ('mfg/spalding')
     else:
         bld.fatal('No MFG configuration for board %s' % bld.env.BOARD)
 
@@ -707,7 +707,7 @@ def _build_normal(bld):
             excludes.append('process_management/app_menu_data_source.c')
     else:
         source_dirs.extend(('apps/%s/**' % d for d in ('system_apps', 'watch')))
-        if bld.is_spalding():
+        if bld.is_spalding() or bld.is_nrf_dk():
             excludes.append('apps/watch/tictoc/default')
         else:
             excludes.append('apps/watch/tictoc/spalding')

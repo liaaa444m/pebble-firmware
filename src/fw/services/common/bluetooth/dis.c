@@ -17,7 +17,7 @@
 #include "system/version.h"
 #include "shell/prefs.h"
 
-#if (PLATFORM_ASTERIX || PLATFORM_NRF_DK) && !RECOVERY_FW
+#if (PLATFORM_ASTERIX) && !RECOVERY_FW
 static bool prv_should_override() { return shell_prefs_bluetooth_legacy_compat(); }
 #else
 static bool prv_should_override() { return false; }

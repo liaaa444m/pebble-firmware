@@ -444,7 +444,7 @@ void display_init(void) {
   nrfx_spim_config_t config = NRFX_SPIM_DEFAULT_CONFIG(
       BOARD_CONFIG_DISPLAY.clk.gpio_pin, BOARD_CONFIG_DISPLAY.mosi.gpio_pin,
       NRF_SPIM_PIN_NOT_CONNECTED, NRF_SPIM_PIN_NOT_CONNECTED);
-  config.frequency = NRFX_MHZ_TO_HZ(16);
+  config.frequency = NRFX_MHZ_TO_HZ(32);
   config.bit_order = NRF_SPIM_BIT_ORDER_MSB_FIRST;
 
   nrfx_err_t err = nrfx_spim_init(&BOARD_CONFIG_DISPLAY.spi, &config, prv_spim_evt_handler, NULL);
