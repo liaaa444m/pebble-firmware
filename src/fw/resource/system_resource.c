@@ -32,7 +32,7 @@ void system_resource_init(void) {
     launcher_panic(ERROR_BAD_RESOURCES);
 #else
     PBL_LOG(LOG_LEVEL_ERROR, "System resources are missing or corrupt! Going to PRF");
-    fw_reset_into_prf();
+    //fw_reset_into_prf();
 #endif
   }
 }

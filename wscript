@@ -1590,7 +1590,7 @@ def image_resources(ctx):
     pbpack_path = ctx.get_pbpack_node().abspath()
     waflib.Logs.pprint('CYAN', 'Writing pbpack "%s" to tty %s' % (pbpack_path, tty))
 
-    ret = os.system("python ./tools/%s.py -t %s -p resources %s" % (tool_name, tty, pbpack_path))
+    ret = os.system("python ./tools/%s.py -v -p -t %s -p resources %s" % (tool_name, tty, pbpack_path))
     if ret != 0:
         ctx.fatal('Imaging failed')
 

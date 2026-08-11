@@ -30,7 +30,7 @@
 #define DISP_MODE_WRITE 0x2CU
 #define DISP_MODE_CLEAR 0x04U
 
-static uint8_t s_buf[((DISP_LINE_BYTES*3/2))];
+static uint8_t s_buf[((200*3))];
 static bool s_updating_single_byte;
 static bool s_updating;
 static NextRowCallback s_nrcb;
@@ -341,14 +341,14 @@ static void prv_gc9a01_init(void) {
   }
   GC9A01_write_command(0x29);
 
-  //set frame to 180x180. I know this isn't Pebble-compliant code but hey, this is my repo i do whatever i want
+  //set frame to 216x216. I know this isn't Pebble-compliant code but hey, this is my repo i do whatever i want
   uint8_t data[4];
 
   GC9A01_write_command(0x2a);
-  data[0] = (30 >> 8) & 0xFF;
-  data[1] = 30 & 0xFF;
-  data[2] = (209 >> 8) & 0xFF;
-  data[3] = 209 & 0xFF;
+  data[0] = (20 >> 8) & 0xFF;
+  data[1] = 20 & 0xFF;
+  data[2] = (219 >> 8) & 0xFF;
+  data[3] = 219 & 0xFF;
   for (int i=0;i<4;i++){
     GC9A01_write_byte(data[i]);
   }
@@ -386,26 +386,35 @@ static void prv_transfer_next_row(void *data){
     return;
   }
   const GBitmapDataRowInfoInternal *row_infos = g_gbitmap_spalding_data_row_infos;
-  for (int i = 0; i < DISP_LINE_BYTES; i++) {
-    uint8_t r,g,b;
-    if (i < row_infos[row.address].min_x || i > row_infos[row.address].max_x) {
-      r = 0;
-      g = 0;
-      b = 0;
-    } else {
-      r = (row.data[i] >> 4) & 0b11;
-      g = (row.data[i] >> 2) & 0b11;
-      b = (row.data[i]) & 0b11;
-    }
-    if (i % 2 == 0){
-      *pbuf++ = (r << 6) | (r << 4) | (g << 2) | g;
-      *pbuf = (b << 6) | (b << 4);
-    } else {
-      *pbuf++ |= (r << 2) | r;
-      *pbuf++ = (g << 6) | (g << 4) | (b << 2) | b;
+  uint8_t loopCount = (row.address % 9 == 4) ? 2 : 1;
+  uint8_t a = 0;
+  for (int j = 0; j < loopCount; j++){
+    for (int i = 0; i < DISP_LINE_BYTES; i++) {
+      uint8_t r = 0,g = 0,b = 0;
+      if (i >= row_infos[row.address].min_x && i <= row_infos[row.address].max_x){
+        r = (row.data[i] >> 4) & 0b11;
+        g = (row.data[i] >> 2) & 0b11;
+        b = (row.data[i]) & 0b11;
+      }
+      if (i % 9 == 4){
+        a += 2;
+        *pbuf++ = (r << 6) | (r << 4) | (g << 2) | g;
+        *pbuf = (b << 6) | (b << 4);
+        *pbuf++ |= (r << 2) | r;
+        *pbuf++ = (g << 6) | (g << 4) | (b << 2) | b;
+      } else {
+        a++;
+        if ((a - 1) % 2 == 0){
+          *pbuf++ = (r << 6) | (r << 4) | (g << 2) | g;
+          *pbuf = (b << 6) | (b << 4);
+        } else {
+          *pbuf++ |= (r << 2) | r;
+          *pbuf++ = (g << 6) | (g << 4) | (b << 2) | b;
+        }
+      }
     }
   }
-  desc.tx_length = DISP_LINE_BYTES * 3 / 2;
+  desc.tx_length = (row.address % 9 == 4) ? 200 * 3 : 200 * 3 / 2;
   nrfx_err_t err = nrfx_spim_xfer(&BOARD_CONFIG_DISPLAY.spi, &desc, 0);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 }

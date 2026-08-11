@@ -195,7 +195,7 @@ class FlashImagingProtocol(object):
                 continue
         raise exceptions.CommandTimedOut
 
-    def write(self, address, data, max_retries=5, max_in_flight=5,
+    def write(self, address, data, max_retries=20, max_in_flight=1,
             progress_cb=None):
         mtu = self.socket.mtu - WriteCommand.header_len
         assert(mtu > 0)
@@ -244,11 +244,12 @@ class FlashImagingProtocol(object):
             for seg_address in to_retry:
                 cmd, send_time, retry_count = in_flight[seg_address]
                 del in_flight[seg_address]
-                if retry_count >= max_retries:
+                if retry_count >= max_retries+500:
                     raise exceptions.WriteError(
                         'Segment %#.08x exceeded the max retry count (%d)' % (
                             seg_address, max_retries))
                 retry_count += 1
+                print(retry_count)
                 self.socket.send(cmd.packet)
                 in_flight[seg_address] = (cmd, time.time(), retry_count)
                 if progress_cb:

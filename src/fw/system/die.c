@@ -27,7 +27,7 @@ NORETURN reset_due_to_software_failure(void) {
   // Don't reset right away, leave it in a state we can inspect
 
   enable_mcu_debugging();
-  __disable_irq();
+  //__disable_irq();
   while (1) {
     continue;
   }
