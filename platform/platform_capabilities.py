@@ -378,6 +378,7 @@ board_capability_dicts = [
         'boards': ['nrf_dk'],
         'capabilities':
         {
+            'HAS_HEALTH_TRACKING',
             'HAS_APP_GLANCES',
             'HAS_LAUNCHER4',
             'HAS_SDK_SHELL4',
@@ -386,8 +387,8 @@ board_capability_dicts = [
             'HAS_FLASH_OTP',
             'HAS_HEALTH_TRACKING',
             'HAS_VIBE_DRV2604',
+            'HAS_WEATHER',
         },
-
     },
 ]
 
