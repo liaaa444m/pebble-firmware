@@ -379,6 +379,7 @@ board_capability_dicts = [
         'capabilities':
         {
             'HAS_HEALTH_TRACKING',
+            'HAS_ROCKY_JS',
             'HAS_APP_GLANCES',
             'HAS_LAUNCHER4',
             'HAS_SDK_SHELL4',

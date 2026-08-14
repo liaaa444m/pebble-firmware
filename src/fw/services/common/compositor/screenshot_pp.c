@@ -98,7 +98,7 @@ static uint32_t prv_framebuffer_next_chunk(FrameBufferState *restrict state,
       remaining_framebuffer_row_bytes = remaining_chunk_bytes;
     }
 
-#ifdef PLATFORM_SPALDING
+#if defined(PLATFORM_SPALDING) || defined(PLATFORM_NRF_DK)
     const GBitmapDataRowInfoInternal *row_infos = g_gbitmap_spalding_data_row_infos;
     const size_t framebuffer_row_min_pixel = row_infos[state->row].min_x;
     const size_t framebuffer_row_max_pixel = row_infos[state->row].max_x;

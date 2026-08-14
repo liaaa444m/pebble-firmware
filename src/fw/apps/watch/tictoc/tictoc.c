@@ -13,7 +13,7 @@ const PebbleProcessMd* tictoc_get_app_info(void) {
                 0x91, 0xf5, 0x01, 0x60, 0x0c, 0x9b, 0xdc, 0x59 },
       .main_func = tictoc_main,
       .process_type = ProcessTypeWatchface,
-#if CAPABILITY_HAS_ROCKY_JS && !defined(PLATFORM_SPALDING)
+#if CAPABILITY_HAS_ROCKY_JS && !defined(PLATFORM_SPALDING) && !defined(PLATFORM_NRF_DK)
       .is_rocky_app = true,
 #endif
     },
