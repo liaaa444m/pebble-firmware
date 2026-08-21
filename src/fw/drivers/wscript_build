@@ -228,6 +228,7 @@ elif bld.is_nrf_dk():
             'driver_temperature',
             'driver_uart',
             'driver_vibe',
+            'driver_voltage_monitor',
         ],
     )
 
@@ -482,13 +483,14 @@ elif bld.is_nrf_dk():
         source=[
             'battery/battery_common.c',
             'battery/battery_adc_conversion.c',
-            #'battery/battery_voltage_monitor.c',
-            'stubs/battery.c',
+            'battery/battery_voltage_monitor.c',
+            'battery/battery_nrf_dk.c',
+            # 'stubs/battery.c',
             # PMIC provides this implementation
         ],
         use=[
             'fw_includes',
-            #'root_includes',
+            'root_includes',
         ],
     )
 
@@ -1628,6 +1630,20 @@ elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'fw_includes',
             'root_includes',
             'stm32_stdlib',
+        ]
+    )
+elif mcu_family in ('NRF52840'):
+    bld.env.DEFINES.append('HAS_DRIVER_VOLTAGE_MONITOR')
+    bld.objects(
+        name='driver_voltage_monitor',
+        source=[
+            'nrf5/voltage_monitor.c',
+        ],
+        use=[
+            'driver_gpio',
+            'driver_periph_config',
+            'fw_includes',
+            'root_includes',
         ]
     )
 

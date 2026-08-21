@@ -4,6 +4,7 @@
 
 #include "drivers/button_id.h"
 #include "debug/power_tracking.h"
+#include "drivers/voltage_monitor.h"
 
 #define NRF52840_COMPATIBLE
 #include <mcu.h>
@@ -311,6 +312,7 @@ typedef const struct HRMDevice HRMDevice;
 typedef const struct MicDevice MicDevice;
 typedef const struct QSPIPort QSPIPort;
 typedef const struct QSPIFlash QSPIFlash;
+typedef const struct VoltageMonitorDevice VoltageMonitorDevice;
 
 void board_early_init(void);
 void board_init(void);

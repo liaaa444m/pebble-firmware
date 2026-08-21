@@ -6,6 +6,7 @@
 
 #include "board/board_nrf5.h"
 //#include "drivers/pmic/npm1300.h"
+#include "nrf52840.h"
 #include "services/imu/units.h"
 #include "util/size.h"
 
@@ -129,8 +130,8 @@ static const BoardConfigBacklight BOARD_CONFIG_BACKLIGHT = {
 static const BoardConfigGC9A01Display BOARD_CONFIG_DISPLAY = {
   .spi = NRFX_SPIM_INSTANCE(3),
   // NOTE: the clk and mosi pins have to differ from what's on the pebble firmware because P0.06 and P0.08 are occupied on the DK.
-  .clk = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1,12),true}, // clock (or scl)
-  .mosi = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1,13),true}, // mosi (or sda)
+  .clk = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1,10),true}, // clock (or scl)
+  .mosi = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1,11),true}, // mosi (or sda)
   .cs = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1,3),true}, // chip select
   .dc = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1,4),true}, // data/command
   .rst = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1,5),true}, //reset
@@ -151,5 +152,8 @@ extern I2CSlavePort * const I2C_DA7212;
 extern I2CSlavePort * const I2C_MMC5603NJ;
 extern I2CSlavePort * const I2C_BMP390;
 extern I2CSlavePort * const I2C_LSM6D;
+extern I2CSlavePort * const I2C_ADXL345;
 
 //extern const Npm1300Config NPM1300_CONFIG;
+
+extern VoltageMonitorDevice * const VOLTAGE_MONITOR_BATTERY;

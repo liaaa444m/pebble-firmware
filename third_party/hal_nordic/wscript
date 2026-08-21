@@ -22,6 +22,7 @@ def configure(conf):
         conf.env.append_unique('DEFINES', 'NRFX_TWIM1_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_UARTE_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_UARTE0_ENABLED=1')
+        conf.env.append_unique('DEFINES', 'NRFX_SAADC_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_SPIM3_NRF52840_ANOMALY_198_WORKAROUND_ENABLED=1')
 
 

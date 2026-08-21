@@ -3,6 +3,12 @@
 
 #include "drivers/battery.h"
 
+#if PLATFORM_NRF_DK
+uint32_t battery_convert_reading_to_millivolts(ADCVoltageMonitorReading reading, uint32_t numerator, uint32_t denominator) {
+  // This is what I like to call: i have no fucking idea what im doing
+  return reading.vref_total * 3600 * 2 / 4095;
+}
+#else
 uint32_t battery_convert_reading_to_millivolts(ADCVoltageMonitorReading reading,
                                                uint32_t numerator, uint32_t denominator) {
   // The result from the ADC is 0-1.8V, but scaled into a 12bit number. That means a value of
@@ -38,3 +44,4 @@ uint32_t battery_convert_reading_to_millivolts(ADCVoltageMonitorReading reading,
 
   return scaled_millivolts;
 }
+#endif

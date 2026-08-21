@@ -1,6 +1,8 @@
+#include "board/boards/board_nrf_dk.h"
 #include <nrfx_i2s.h>
 
 #include "board/board.h"
+#include "board/board_nrf5.h"
 #include "drivers/flash/qspi_flash_definitions.h"
 #include "drivers/gpio.h"
 #include "drivers/i2c.h"
@@ -14,6 +16,7 @@
 #include "drivers/pwm.h"
 #include "drivers/qspi_definitions.h"
 #include "drivers/rtc.h"
+#include "drivers/voltage_monitor.h"
 #include "flash_region/flash_region.h"
 #include "kernel/util/sleep.h"
 #include "system/passert.h"
@@ -181,6 +184,13 @@ static const I2CSlavePort I2C_SLAVE_LSM6D = {
 
 I2CSlavePort *const I2C_LSM6D = &I2C_SLAVE_LSM6D;
 
+static const I2CSlavePort I2C_SLAVE_ADXL345 = {
+    .bus = &I2C_IIC2_BUS,
+    .address = 0x53 << 1,
+};
+
+I2CSlavePort * const I2C_ADXL345 = &I2C_SLAVE_ADXL345;
+
 IRQ_MAP_NRFX(I2S, nrfx_i2s_0_irq_handler);
 
 IRQ_MAP_NRFX(PDM, NRFX_PDM_INST_HANDLER_GET(0));
@@ -239,4 +249,14 @@ void board_init(void) {
   i2c_use(I2C_DA7212);
   i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
   i2c_release(I2C_DA7212);
+
+  voltage_monitor_device_init(VOLTAGE_MONITOR_BATTERY);
 }
+
+// Voltage monitor
+static const VoltageMonitorDevice VOLTAGE_MONITOR_BATTERY_DEVICE = {
+  .adc = NRF_SAADC,
+  .adc_channel = 0,
+  .input = NRF_SAADC_INPUT_AIN0,
+};
+VoltageMonitorDevice * const VOLTAGE_MONITOR_BATTERY = &VOLTAGE_MONITOR_BATTERY_DEVICE;
