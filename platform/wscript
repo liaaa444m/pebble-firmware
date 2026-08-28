@@ -50,6 +50,9 @@ def is_nucleo(ctx):
 def is_nrf_dk(ctx):
     return ctx.get_board().startswith('nrf_dk');
 @conf
+def is_promicro(ctx):
+    return ctx.get_board().startswith('promicro');
+@conf
 def is_obelix(ctx):
     return ctx.get_board().startswith('obelix')
 
@@ -95,7 +98,7 @@ def get_platform_name(ctx):
         return "obelix"
     elif is_nucleo(ctx):
         return "nucleo"
-    elif is_nrf_dk(ctx):
+    elif is_nrf_dk(ctx) or is_promicro(ctx):
         return "nrf_dk"
     else:
         return "unknown"
@@ -189,7 +192,7 @@ def has_touch(ctx):
         return True
     elif is_nucleo(ctx):
         return False
-    elif is_nrf_dk(ctx):
+    elif is_nrf_dk(ctx) or is_promicro(ctx):
         return False
     else:
         return None
@@ -250,7 +253,7 @@ def add_platform_defines(ctx, env):
     elif ctx.is_nucleo():
         bit_depth = 8
         platform = 'NUCLEO'
-    elif ctx.is_nrf_dk():
+    elif ctx.is_nrf_dk() or ctx.is_promicro():
         bit_depth = 8;
         platform = 'NRF_DK'
     else:

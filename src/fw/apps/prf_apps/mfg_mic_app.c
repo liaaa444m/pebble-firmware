@@ -90,7 +90,7 @@ static nrfx_pdm_config_t s_pdm_cfg =
 static const nrfx_i2s_t s_i2s = NRFX_I2S_INSTANCE(0);
 static nrfx_i2s_config_t s_i2s_cfg =
     NRFX_I2S_DEFAULT_CONFIG(NRF_GPIO_PIN_MAP(0, 12), NRF_GPIO_PIN_MAP(0, 7), NRF_GPIO_PIN_MAP(1, 9),
-                            NRF_GPIO_PIN_MAP(0, 13), NRF_I2S_PIN_NOT_CONNECTED);
+                            NRF_GPIO_PIN_MAP(0, 1), NRF_I2S_PIN_NOT_CONNECTED);
 
 typedef struct {
   Window window;

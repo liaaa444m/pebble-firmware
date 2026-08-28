@@ -390,14 +390,25 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   NVIC_EnableIRQ(QSPI_IRQn);
 
   dev->qspi->state->sem = xSemaphoreCreateBinary();
+
+  qspi_flash_check_whoami(dev);
+
   dev->qspi->state->initialized = true;
 }
 
 bool qspi_flash_check_whoami(QSPIFlash *dev) {
   QSPIFlashPart *part = dev->state->part;
   uint32_t val;
+  uint8_t in_90[3] = {0x0,0x0,0x0};
+  uint8_t in_5a[4] = {0x0,0x0,0x0,0x0};
+  uint8_t out[5] = {};
 
   prv_cinstr_read(dev, part->instructions.qspi_id, &val, 3U);
+  PBL_LOG(LOG_LEVEL_DEBUG,"flash who am i: %lx",val);
+  prv_cinstr_write_read(dev, 0x90u, &in_90, out, 5);
+  PBL_LOG(LOG_LEVEL_DEBUG,"flash 0x90: %x %x",out[0],out[1]);
+  prv_cinstr_write_read(dev, 0x5au, &in_5a, out, 8);
+  PBL_LOG(LOG_LEVEL_DEBUG,"flash 0x5a: %x %x %x %x",out[0],out[1],out[2],out[3]);
 
   return val == part->qspi_id_value;
 }

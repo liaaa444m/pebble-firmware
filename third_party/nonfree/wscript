@@ -1,6 +1,6 @@
 def build(bld):
-    if bld.is_asterix() or bld.is_obelix() or bld.is_nrf_dk():
-        if bld.is_asterix() or bld.is_nrf_dk():
+    if bld.is_asterix() or bld.is_obelix() or bld.is_nrf_dk() or bld.is_promicro:
+        if bld.is_asterix() or bld.is_nrf_dk() or bld.is_promicro:
             paths = ['pebbleos-nonfree/npm1300/nrf_fuel_gauge/lib/cortex-m4/soft-float']
         elif bld.is_obelix():
             paths = ['pebbleos-nonfree/npm1300/nrf_fuel_gauge/lib/cortex-m33/soft-float']

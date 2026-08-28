@@ -53,6 +53,7 @@ RUNNERS = {
     'robert_es': ['openocd'],
     'asterix': ['openocd', 'nrfutil'],
     'nrf_dk': ['openocd', 'nrfutil'],
+    'promicro': ['openocd', 'nrfutil'],
     'obelix_evt': ['sftool'],
     'obelix_dvt': ['sftool'],
     'obelix_pvt': ['sftool'],
@@ -120,6 +121,7 @@ def options(opt):
                              'robert_es',
                              'asterix',
                              'nrf_dk',
+                             'promicro',
                              'obelix_evt',
                              'obelix_dvt',
                              'obelix_pvt',
@@ -504,7 +506,7 @@ def configure(conf):
     if conf.is_tintin():
         conf.env.PLATFORM_NAME = 'aplite'
         conf.env.MIN_SDK_VERSION = 2
-    elif conf.is_spalding() or conf.is_nucleo() or conf.is_nrf_dk():
+    elif conf.is_spalding() or conf.is_nucleo() or conf.is_nrf_dk() or conf.is_promicro():
         conf.env.PLATFORM_NAME = 'chalk'
         conf.env.MIN_SDK_VERSION = 3
     elif conf.options.board == 'snowy_emery':
@@ -534,7 +536,7 @@ def configure(conf):
         conf.env.MICRO_FAMILY = 'STM32F4'
     elif conf.is_cutts() or conf.is_robert():
         conf.env.MICRO_FAMILY = 'STM32F7'
-    elif conf.is_asterix() or conf.is_nrf_dk():
+    elif conf.is_asterix() or conf.is_nrf_dk() or conf.is_promicro():
         conf.env.MICRO_FAMILY = 'NRF52840'
     elif conf.is_obelix():
         conf.env.MICRO_FAMILY = 'SF32LB52'
@@ -583,7 +585,7 @@ def configure(conf):
     elif conf.is_tintin() or conf.is_snowy() or conf.is_spalding():
         conf.env.bt_controller = 'cc2564x'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_CC2564X'])
-    elif conf.is_asterix() or conf.is_nrf_dk:
+    elif conf.is_asterix() or conf.is_nrf_dk() or conf.is_promicro():
         conf.env.bt_controller = 'nrf52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF52'])
     elif bt_board in ('silk_bb2', 'silk', 'robert_bb2', 'robert_evt'):

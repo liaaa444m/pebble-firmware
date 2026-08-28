@@ -203,7 +203,7 @@ elif bld.is_asterix():
             'driver_vibe',
         ],
     )
-elif bld.is_nrf_dk():
+elif bld.is_nrf_dk() or bld.is_promicro():
     bld(
         name='drivers',
         use=[
@@ -341,7 +341,7 @@ elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'stm32_stdlib',
         ],
     )
-elif bld.is_nrf_dk():
+elif bld.is_nrf_dk() or bld.is_promicro():
     bld.objects(
         name='driver_ambient_light',
         source=[
@@ -477,7 +477,7 @@ elif bld.is_asterix() or bld.is_obelix():
             'root_includes',
         ],
     )
-elif bld.is_nrf_dk():
+elif bld.is_nrf_dk() or bld.is_promicro():
     bld.objects(
         name='driver_battery',
         source=[
@@ -541,7 +541,7 @@ if bld.is_silk() and not bld.env.QEMU:
         ],
     )
 
-if bld.is_asterix() or bld.is_obelix_evt() or bld.is_obelix_bb() or bld.is_nrf_dk():
+if bld.is_asterix() or bld.is_obelix_evt() or bld.is_obelix_bb() or bld.is_nrf_dk() or bld.is_promicro():
     bld.objects(
         name='driver_lsm6dso',
         source=[
@@ -681,7 +681,7 @@ elif bld.is_asterix():
             'hal_nordic',
         ],
     )
-elif bld.is_nrf_dk():
+elif bld.is_nrf_dk() or bld.is_promicro():
     # FIXME: driver should use platform agnostic SPI interface
     bld.objects(
         name='driver_display',
@@ -874,6 +874,23 @@ elif bld.is_nrf_dk():
             'flash/flash_erase.c',
             'flash/cd_flash_driver.c',
             'flash/mx25u.c',
+        ],
+        use=[
+            'driver_qspi',
+            'freertos',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+elif bld.is_promicro():
+    bld.objects(
+        name='driver_flash',
+        source=[
+            'flash/flash_api.c',
+            'flash/flash_crc.c',
+            'flash/flash_erase.c',
+            'flash/cd_flash_driver.c',
+            'flash/w25q64.c',
         ],
         use=[
             'driver_qspi',
@@ -1141,7 +1158,7 @@ elif bld.is_silk():
             'root_includes',
         ],
     )
-elif bld.is_asterix() or bld.is_nrf_dk():
+elif bld.is_asterix() or bld.is_nrf_dk() or bld.is_promicro():
     bld.objects(
         name='driver_imu',
         source=[
@@ -1251,7 +1268,7 @@ if bld.is_tintin() or bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robe
         ],
     )
 
-if bld.is_asterix() or bld.is_obelix() or bld.is_nrf_dk():
+if bld.is_asterix() or bld.is_obelix() or bld.is_nrf_dk() or bld.is_promicro():
     bld.objects(
         name='driver_mmc5603nj',
         source=[

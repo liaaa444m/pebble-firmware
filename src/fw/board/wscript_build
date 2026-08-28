@@ -111,6 +111,18 @@ elif board in ('nrf_dk'):
             'drivers',
         ],
     )
+elif board in ('promicro'):
+    bld.objects(
+        name='board',
+        source=[
+            'boards/board_promicro.c',
+        ],
+        use=[
+            'fw_includes',
+            'freertos',
+            'drivers',
+        ],
+    )
 elif board in ('obelix_evt', 'obelix_dvt', 'obelix_pvt', 'obelix_bb', 'obelix_bb2'):
     bld.objects(
         name='board',

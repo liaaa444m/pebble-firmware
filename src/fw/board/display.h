@@ -79,7 +79,7 @@ typedef struct {
 #elif BOARD_NUCLEO
 // NOTE: It might work. It might not. You should still try not to do this though.
 #include "displays/display_spalding.h"
-#elif BOARD_NRF_DK
+#elif BOARD_NRF_DK || BOARD_PROMICRO
 #include "displays/display_nrf_dk.h"
 #else
 #error "Unknown display definition for board"

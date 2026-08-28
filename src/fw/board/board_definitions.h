@@ -58,6 +58,8 @@
 #include "boards/board_nucleo.h" // stm32f446re nucleo testbed for Peridot
 #elif BOARD_NRF_DK
 #include "boards/board_nrf_dk.h"
+#elif BOARD_PROMICRO
+#include "boards/board_promicro.h"
 #else
 #error "Unknown board definition"
 #endif

@@ -226,7 +226,7 @@ int main(void) {
 #ifdef RECOVERY_FW
   boot_bit_clear(BOOT_BIT_RECOVERY_START_IN_PROGRESS);
 #endif
-#ifdef BOARD_NRF_DK
+#if defined(BOARD_NRF_DK) || defined(BOARD_PROMICRO) //i... honestly forgot why i added this. but nothing's breaking so i dont have a reason to remove this (yet)
   boot_bit_clear(BOOT_BIT_FW_START_FAIL_STRIKE_TWO);
 #endif
 

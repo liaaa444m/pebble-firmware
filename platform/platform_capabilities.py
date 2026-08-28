@@ -375,7 +375,7 @@ board_capability_dicts = [
             #'HAS_WEATHER',
             #'HAS_PUTBYTES_PREACKING'
         },
-        'boards': ['nrf_dk'],
+        'boards': ['nrf_dk','promicro'],
         'capabilities':
         {
             'HAS_HEALTH_TRACKING',
