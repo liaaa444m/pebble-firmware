@@ -23,6 +23,9 @@ def configure(conf):
         conf.env.append_unique('DEFINES', 'NRFX_UARTE_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_UARTE0_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_SAADC_ENABLED=1')
+        conf.env.append_unique('DEFINES', 'NRFX_POWER_ENABLED=1')
+        conf.env.append_unique('DEFINES', 'NRFX_CLOCK_ENABLED=1')
+        conf.env.append_unique('DEFINES', 'NRFX_POWER_HAS_USBREG=1')
         conf.env.append_unique('DEFINES', 'NRFX_SPIM3_NRF52840_ANOMALY_198_WORKAROUND_ENABLED=1')
 
 
@@ -43,13 +46,14 @@ def build(bld):
         if bld.is_asterix():
             # is there a better way to do this?
             micro_includes += ['../../src/fw/board/boards/board_asterix']
-        if bld.is_nrf_dk():
+        elif bld.is_nrf_dk():
             # is there a better way to do this?
             micro_includes += ['../../src/fw/board/boards/board_nrf_dk']
-        if bld.is_promicro():
+        elif bld.is_promicro():
             # is there a better way to do this?
             micro_includes += ['../../src/fw/board/boards/board_promicro']
         else:
+            print("the fuck?")
             bld.fatal("no board for nRF5 includes")
 
         bld.stlib(source=micro_sources,

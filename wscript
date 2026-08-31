@@ -80,7 +80,7 @@ def run_arm_gdb(ctx, elf_node, cmd_str="", target_server_port=3333):
     arm_none_eabi_path = find_gdb_path()
     if arm_none_eabi_path is None:
         ctx.fatal("pebble-gdb not found!")
-    os.system('{} {} {} --ex="target remote :{}"'.format(
+    os.system('{} {} {} --ex="target extended-remote :{}"'.format(
                 arm_none_eabi_path, elf_node.path_from(ctx.path),
                 cmd_str, target_server_port)
               )

@@ -166,7 +166,7 @@ static VoltagePoint discharge_curve[] = {
   {70,  3935},
   {80,  4025},
   {90,  4120},
-  {100, 4230}
+  {100, 4200}
 };
 
 static const VoltagePoint charge_curve[] = {
@@ -182,7 +182,7 @@ static const VoltagePoint charge_curve[] = {
   {70,  4030},
   {80,  4095},
   {90,  4175},
-  {100, 4260}
+  {100, 4200}
 };
 
 #else

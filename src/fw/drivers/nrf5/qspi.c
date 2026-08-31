@@ -401,7 +401,7 @@ bool qspi_flash_check_whoami(QSPIFlash *dev) {
   uint32_t val;
   uint8_t in_90[3] = {0x0,0x0,0x0};
   uint8_t in_5a[4] = {0x0,0x0,0x0,0x0};
-  uint8_t out[5] = {};
+  uint8_t out[5] = {0x0,0x0,0x0,0x0,0x0};
 
   prv_cinstr_read(dev, part->instructions.qspi_id, &val, 3U);
   PBL_LOG(LOG_LEVEL_DEBUG,"flash who am i: %lx",val);

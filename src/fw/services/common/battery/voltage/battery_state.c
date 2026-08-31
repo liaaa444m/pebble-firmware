@@ -22,7 +22,7 @@
 #ifdef DEBUG_BATTERY_STATE
 #define BATTERY_SAMPLE_RATE_MS 1000
 #else
-#define BATTERY_SAMPLE_RATE_MS (60 * 1000)
+#define BATTERY_SAMPLE_RATE_MS (15 * 1000)
 #endif
 
 typedef void (*EntryFunc)(void);

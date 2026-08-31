@@ -103,6 +103,7 @@ void GC9A01_write_byte(uint8_t cmd){
 }
 
 static void prv_gc9a01_init(void) {
+  // All of this is required for the display to be properly initialised. Yeah, I know.
   prv_disable_chip_select();
   prv_enable_reset();
   vTaskDelay(pdMS_TO_TICKS(100));

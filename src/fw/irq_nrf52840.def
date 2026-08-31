@@ -15,7 +15,7 @@
   SysTick              =  -1,              /*!< -1 System Tick Timer                                                      */
 #endif
 /* ==========================================  nrf52840 Specific Interrupt Numbers  ========================================== */
-REVERSE_IRQ_DEF(POWER_CLOCK          ,   0)              /*!< 0  POWER_CLOCK                                                            */
+REVERSE_IRQ_DEF(CLOCK_POWER          ,   0)              /*!< 0  CLOCK_POWER                                                            */
 REVERSE_IRQ_DEF(RADIO                ,   1)              /*!< 1  RADIO                                                                  */
 REVERSE_IRQ_DEF(UART0_UARTE0         ,   2)              /*!< 2  UART0_UARTE0                                                           */
 REVERSE_IRQ_DEF(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0,   3)  /*!< 3  SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0                                      */

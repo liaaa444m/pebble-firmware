@@ -19,6 +19,7 @@
 #include "flash_region/flash_region.h"
 #include "kernel/util/sleep.h"
 #include "nrf_qspi.h"
+#include "nrfx_pwm.h"
 #include "system/passert.h"
 #include "util/units.h"
 
@@ -30,6 +31,7 @@
 #include <nrfx_spim.h>
 #include <nrfx_twim.h>
 #include <nrfx_pdm.h>
+#include <nrfx_power.h>
 
 static QSPIPortState s_qspi_port_state;
 static QSPIPort QSPI_PORT = {
@@ -225,8 +227,18 @@ const Npm1300Config NPM1300_CONFIG = {
   .thermistor_beta = 3380,
 };
 */
+
+// Voltage monitor
+static const VoltageMonitorDevice VOLTAGE_MONITOR_BATTERY_DEVICE = {
+  .adc = NRF_SAADC,
+  .adc_channel = 0,
+  .input = NRF_SAADC_INPUT_AIN0,
+};
+IRQ_MAP_NRFX(CLOCK_POWER, nrfx_power_clock_irq_handler);
+
+VoltageMonitorDevice * const VOLTAGE_MONITOR_BATTERY = &VOLTAGE_MONITOR_BATTERY_DEVICE;
 void board_early_init(void) {
-  PBL_LOG(LOG_LEVEL_ERROR, "asterix early init");
+  PBL_LOG(LOG_LEVEL_ERROR, "promicro early init");
 
   NRF_NVMC->ICACHECNF |= NVMC_ICACHECNF_CACHEEN_Msk;
 
@@ -254,10 +266,3 @@ void board_init(void) {
   voltage_monitor_device_init(VOLTAGE_MONITOR_BATTERY);
 }
 
-// Voltage monitor
-static const VoltageMonitorDevice VOLTAGE_MONITOR_BATTERY_DEVICE = {
-  .adc = NRF_SAADC,
-  .adc_channel = 0,
-  .input = NRF_SAADC_INPUT_AIN0,
-};
-VoltageMonitorDevice * const VOLTAGE_MONITOR_BATTERY = &VOLTAGE_MONITOR_BATTERY_DEVICE;

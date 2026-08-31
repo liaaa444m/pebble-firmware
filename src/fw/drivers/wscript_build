@@ -491,6 +491,7 @@ elif bld.is_nrf_dk() or bld.is_promicro():
         use=[
             'fw_includes',
             'root_includes',
+            'hal_nordic',
         ],
     )
 
