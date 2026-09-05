@@ -33,4 +33,4 @@ Here's a quick summary of resources to help you find your way around:
 - 👥 [Discussions](https://github.com/pebble-dev/pebble-firmware/discussions)
 
 ### Here for ProMicro flashing instructions?
-Check out [this guide](https://github.com/liaaa444m/pebble-firmware/PROMICRO_HOW_TO.md)
+Check out [this guide](https://github.com/liaaa444m/pebble-firmware/blob/main/PROMICRO_HOW_TO.md)
