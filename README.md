@@ -18,8 +18,8 @@ Here's a quick summary of resources to help you find your way around:
 
 ### Getting Started
 
-- 📖 [Documentation](https://pebbleos-core.readthedocs.io/en/latest)
-- 🚀 [Getting Started Guide](https://pebbleos-core.readthedocs.io/en/latest/getting_started.html)
+- 📖 [Documentation](https://pebbleos.readthedocs.io/en/latest)
+- 🚀 [Getting Started Guide](https://pebbleos.readthedocs.io/en/latest/getting_started.html)
 
 ### Code and Development
 
@@ -31,6 +31,7 @@ Here's a quick summary of resources to help you find your way around:
 
 - 💬 [Discord](https://discordapp.com/invite/aRUAYFN)
 - 👥 [Discussions](https://github.com/pebble-dev/pebble-firmware/discussions)
+- The project's [Discord thread](https://discord.com/channels/221364737269694464/1448121475868397588) (join the server first)
 
 ### Here for ProMicro flashing instructions?
 Check out [this guide](https://github.com/liaaa444m/pebble-firmware/blob/main/PROMICRO_HOW_TO.md)

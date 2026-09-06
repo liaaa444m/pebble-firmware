@@ -23,7 +23,7 @@ Clone the fork, and follow [these instructions](https://pebbleos.readthedocs.io/
         - The ProMicro board **has** to be externally powered. Simply powering the board through the USB port will do the job.
     - nRF52840 DK: (**DO NOT POWER THE BOARD EXTERNALLY USING THIS METHOD**)
         - VDD_nRF' to VDD (it **must** be the VDD pad, otherwise the chip won't be properly powered and flashing will fail)
-        - VDD_nRF to SWDSEL (both pins have to be connected to the DK, otherwise you'd be flashing the DK's chip)
+        - VDD_nRF to SWDSEL (both pins have to be connected on the DK, otherwise you'd be flashing the DK's chip)
         - SWDIO to the DIO pad
         - SWDCLK to the CLK pad
         - GND to GND (I generally use the pad)
@@ -50,9 +50,9 @@ Personally, I think the ST-Link method is much easier to work with since you onl
     - If the command throws an error after writing data for a while, there's a good chance the resource flashing has actually worked. Reset the board and check the console output using `./waf console --tty=$SERIAL_ADAPTER` (or look at the screen if you've connected one. If it succeeded, you should see the charging coffee mug icon.)
     - If the command fails before it prints `Erasing...` and says something about NoneType, **power cycle** the board and try again. If that doesn't work, just keep trying until it works. If *that* doesn't work either, god help you.
 
-You should now *finally* have PebbleOS running on your ProMicro board. Have fun!
+You should now *finally* have PebbleOS running on your ProMicro board. Have fun! If there's any trouble or questions, you're welcome to ask them in the Discord thread linked in the README.
 
-## Pin assignment for the GC9A01 display and buttons
+## Pin assignment for the GC9A01 display, buttons, and battery
 - GC9A01: (Despite some pins being labeled as SCL and SDA, basically every GC9A01 display module uses SPI)
     - VCC to VCC
     - GND to GND
@@ -67,3 +67,6 @@ You should now *finally* have PebbleOS running on your ProMicro board. Have fun!
     - Up: 104
     - Select: 106
     - Down: 031
+- Battery:
+    - Connect the battery's positive and negative terminals to B+ and B- respectively
+    - You can hook the battery to a voltage divider (specifically one that divides the voltage in half) and connect it to pin 002 for a crude way to measure battery percentage. Very inaccurate.
