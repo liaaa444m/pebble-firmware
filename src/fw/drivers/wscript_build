@@ -542,7 +542,7 @@ if bld.is_silk() and not bld.env.QEMU:
         ],
     )
 
-if bld.is_asterix() or bld.is_obelix_evt() or bld.is_obelix_bb() or bld.is_nrf_dk() or bld.is_promicro():
+if bld.is_asterix() or bld.is_obelix_evt() or bld.is_obelix_bb():
     bld.objects(
         name='driver_lsm6dso',
         source=[
@@ -550,6 +550,17 @@ if bld.is_asterix() or bld.is_obelix_evt() or bld.is_obelix_bb() or bld.is_nrf_d
         ],
         use=[
             'hal_lsm6dso',
+            'fw_includes',
+        ],
+    )
+if bld.is_nrf_dk() or bld.is_promicro():
+    bld.objects(
+        name='driver_adxl345',
+        source=[
+            'imu/adxl345/adxl345.c',
+        ],
+        use=[
+            'driver_i2c',
             'fw_includes',
         ],
     )
@@ -1159,7 +1170,7 @@ elif bld.is_silk():
             'root_includes',
         ],
     )
-elif bld.is_asterix() or bld.is_nrf_dk() or bld.is_promicro():
+elif bld.is_asterix():
     bld.objects(
         name='driver_imu',
         source=[
@@ -1168,6 +1179,18 @@ elif bld.is_asterix() or bld.is_nrf_dk() or bld.is_promicro():
         use=[
             'driver_lsm6dso',
             'driver_mmc5603nj',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+elif bld.is_nrf_dk() or bld.is_promicro():
+    bld.objects(
+        name='driver_imu',
+        source=[
+            'imu/imu_nrf_dk.c',
+        ],
+        use=[
+            'driver_adxl345',
             'fw_includes',
             'root_includes',
         ],
@@ -1269,7 +1292,7 @@ if bld.is_tintin() or bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robe
         ],
     )
 
-if bld.is_asterix() or bld.is_obelix() or bld.is_nrf_dk() or bld.is_promicro():
+if bld.is_asterix() or bld.is_obelix():
     bld.objects(
         name='driver_mmc5603nj',
         source=[
