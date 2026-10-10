@@ -12,6 +12,7 @@ You will need:
 Clone the fork, and follow [these instructions](https://pebbleos.readthedocs.io/en/latest/getting_started.html) for building the firmware until the end of the Building section. Note that the arguments for the `./waf configure` command are as follows:
 - `--board=promicro`
 - `openocd_jtag`: If you're using an ST-Link, use `openocd_jtag=swd_stlink`. If you're using a J-Link debugger like on the nRF52840 DK, use `openocd_jtag=swd_jlink`. For other debuggers, consult the JTAG_OPTIONS table in [waftools/openocd.py](https://github.com/liaaa444m/pebble-firmware/blob/main/waftools/openocd.py)
+After you've built the firmware itself, go into platform/promicro/boot, run `./waf configure` and `./waf build` to build the bootloader.
 
 ## Flashing the firmware
 1. Connect your debugger of choice to the ProMicro. There should be 4 pads underneath the ProMicro board labeled VDD, DIO, CLK, and GND. Depending on your debugger of choice, the wiring will be different. Below is how I connected my ST-Link and my nRF52840 DK's J-Link to the ProMicro:
@@ -29,9 +30,12 @@ Clone the fork, and follow [these instructions](https://pebbleos.readthedocs.io/
         - GND to GND (I generally use the pad)
 Personally, I think the ST-Link method is much easier to work with since you only have to deal with the DIO and CLK pds, and for that all you really have to do is touch them with jumper wires. 
 
-2. Flash the firmware using `./waf flash_fw`.
+2. Go into platform/promicro/boot and flash the bootloader using `./flash`
+
+3. Flash the firmware using `./waf flash_fw`.
 
 *Note: I have yet to write the bootloader for the ProMicro board, so right now the board boots right into the OS itself instead of through the bootloader like the actual watches. This does mean that the watch cannot be shut down through the OS, nor can it be updated OTA. Unfortunately I only just got the firmware to run well enough on the board before my summer break ended, so it'll take a while for me to get to writing the bootloader. You are more than welcome to help, but do remember to change the firmware's flash offset size in src/fw/wscript. I would not recommend trying to make a functioning watch using this fork of PebbleOS for the time being. I do highly recommend making a desk clock though, just not a battery-powered one.* 
+*Update 2025/10/10: The board now has a bootloader and can be shut down, and in theory update via OTA, though I haven't gotten that to work with my .pbz files yet.*
 
 ## Actually getting the firmware to boot
 1. Connect the W25Q module to the board as follows:
