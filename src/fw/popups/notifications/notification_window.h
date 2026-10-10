@@ -20,6 +20,8 @@ bool notification_window_is_modal(void);
 
 void notification_window_handle_notification(PebbleSysNotificationEvent *e);
 
+void notification_push_held(void);
+
 void notification_window_handle_reminder(PebbleReminderEvent *e);
 
 void notification_window_handle_dnd_event(PebbleDoNotDisturbEvent *e);

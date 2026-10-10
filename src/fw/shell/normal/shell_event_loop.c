@@ -3,6 +3,9 @@
 
 #include <kernel/events.h>
 #include "shell/shell_event_loop.h"
+#include "applib/graphics/framebuffer.h"
+#include "services/common/compositor/compositor.h"
+#include "services/common/compositor/compositor_display.h"
 #include "shell/prefs_private.h"
 
 #include "apps/system_app_ids.h"
@@ -101,6 +104,14 @@ void shell_event_loop_handle_event(PebbleEvent *e) {
     case PEBBLE_SYS_NOTIFICATION_EVENT:
       // This handles incoming Notifications and actions on Notifications and Reminders
       notification_window_handle_notification(&e->sys_notification);
+      return;
+    case PEBBLE_DISPLAY_ON_EVENT:
+      // Update the display after wake. This is so that watchfaces that only update once a minute don't look like they're stuck in time
+      FrameBuffer *fb = compositor_get_framebuffer();
+      framebuffer_dirty_all(fb);
+      compositor_display_update(NULL);
+      // Flushes the last notification saved for animation (if any)
+      notification_push_held(); 
       return;
 
     case PEBBLE_CALENDAR_EVENT:

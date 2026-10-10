@@ -11,7 +11,9 @@ void imu_init(void) {
 }
 
 void imu_power_up(void) {
+  adxl345_power_up();
 }
 
 void imu_power_down(void) {
+  adxl345_power_down();
 }

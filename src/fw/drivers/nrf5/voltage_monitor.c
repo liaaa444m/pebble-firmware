@@ -25,6 +25,7 @@ void voltage_monitor_device_init(const VoltageMonitorDevice *device){
 	channel.channel_config.burst = NRF_SAADC_BURST_ENABLED;
 	nrfx_saadc_channels_config(&channel, 1);
 	nrfx_saadc_simple_mode_set(1 << 0, NRF_SAADC_RESOLUTION_12BIT, NRF_SAADC_OVERSAMPLE_32X, NULL);
+	nrfx_saadc_offset_calibrate(NULL);
 }
 
 void voltage_monitor_read(const VoltageMonitorDevice *device, VoltageReading *reading_out){

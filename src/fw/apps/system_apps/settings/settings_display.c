@@ -125,12 +125,12 @@ static void prv_display_orientation_menu_push(SettingsDisplayData *data) {
 // Timeout Settings
 /////////////////////////////
 
-static const uint32_t s_timeout_values[] = { 3000, 5000, 8000 };
+static const uint32_t s_timeout_values[] = {8000, 10000, 12000};
 
 static const char *s_timeout_labels[] = {
-  i18n_noop("3 Seconds"),
-  i18n_noop("5 Seconds"),
-  i18n_noop("8 Seconds")
+  i18n_noop("8 Seconds"),
+  i18n_noop("10 Seconds"),
+  i18n_noop("12 Seconds")
 };
 
 static int prv_timeout_get_selection_index() {

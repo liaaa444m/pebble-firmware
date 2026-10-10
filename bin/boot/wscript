@@ -9,6 +9,8 @@ def configure(cfg):
         bootloader_board = 'silk'
     elif cfg.is_cutts():
         bootloader_board = 'robert_bb'
+    elif cfg.is_promicro():
+        bootloader_board = 'promicro'
     else:
         bootloader_board = cfg.options.board
 

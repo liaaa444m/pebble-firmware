@@ -227,6 +227,7 @@ static bool prv_push_notification_window(NotificationsData *data) {
     node = (NotificationNode*)list_get_prev(&node->node);
   }
 
+  PBL_LOG(LOG_LEVEL_DEBUG,"Pushing Notification Window");
   notification_window_show();
   return true;
 }

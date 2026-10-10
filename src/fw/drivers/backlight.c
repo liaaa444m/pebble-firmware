@@ -17,6 +17,7 @@
 #include "kernel/util/stop.h"
 #include "system/logging.h"
 #include "system/passert.h"
+#include "display/gc9a01/gc9a01.h"
 
 // Parameters to a timer based PWM.
 //
@@ -103,7 +104,8 @@ void backlight_init(void) {
 // TODO: PBL-36077 Move to a generic 4v5 enable
 void led_enable(LEDEnabler enabler) {
   if (s_led_enable == 0) {
-    gpio_output_set(&BOARD_CONFIG_BACKLIGHT.ctl, true);
+    //gpio_output_set(&BOARD_CONFIG_BACKLIGHT.ctl, true);
+    gc9a01_toggle_display(true);
   }
   s_led_enable |= enabler;
 }
@@ -112,7 +114,8 @@ void led_enable(LEDEnabler enabler) {
 void led_disable(LEDEnabler enabler) {
   s_led_enable &= ~enabler;
   if (s_led_enable == 0) {
-    gpio_output_set(&BOARD_CONFIG_BACKLIGHT.ctl, false);
+    //gpio_output_set(&BOARD_CONFIG_BACKLIGHT.ctl, false);
+    gc9a01_toggle_display(false);
   }
 }
 

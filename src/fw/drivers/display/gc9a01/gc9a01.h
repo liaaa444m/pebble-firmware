@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include "../display.h"
 
 #define DISP_LINE_BYTES (DISP_COLS)
@@ -23,3 +24,4 @@ typedef struct {
   UpdateCompleteCallback complete;
 } DisplayContext;
 
+void gc9a01_toggle_display(bool enable);

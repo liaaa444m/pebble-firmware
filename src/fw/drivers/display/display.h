@@ -46,3 +46,8 @@ typedef struct GPoint GPoint;
 void display_set_offset(GPoint offset);
 
 GPoint display_get_offset(void);
+
+#if defined(BOARD_PROMICRO) || defined(BOARD_NRF_DK)
+bool display_is_on(void);
+#endif
+

@@ -1,10 +1,12 @@
 #include "board/board_nrf5.h"
 #include "drivers/accel.h"
+#include "drivers/exti.h"
 #include "drivers/i2c.h"
 #include "drivers/vibe.h"
 #include "kernel/util/sleep.h"
 #include "services/common/regular_timer.h"
 #include "services/common/vibe_pattern.h"
+#include "services/imu/units.h"
 #include "system/logging.h"
 #include "util/math.h"
 #include "adxl345_regs.h"
@@ -86,12 +88,12 @@ static bool s_rotated_180 = false;
 #define ADXL345_FIFO_MAX_WATERMARK 32
 
 // Maximum allowed sampling interval for tap detection (in microseconds)
-#define ADXL345_TAP_DETECTION_MAX_INTERVAL_US 159375
+#define ADXL345_TAP_DETECTION_MAX_INTERVAL_US 2000 
 
 #define ADXL345_VIBE_COOLDOWN_MS 50
 
 #define ADXL345_MAX_CONSECUTIVE_FAILURES 3
-#define ADXL345_IONTERRUPT_GAP_LOG_THRESHOLD_MS 3000
+#define ADXL345_INTERRUPT_GAP_LOG_THRESHOLD_MS 3000
 #define ADXL345_INTERRUPT_WATCHDOG_MS 10000
 #define ADXL345_INTERRUPT_WATCHDOG_TIMEOUT_MS 5000
 #define ADXL345_INTERRUPT_WATCHDOG_MS_NO_SAMPLES 600000
@@ -259,6 +261,8 @@ static void prv_adxl345_init(void) {
 	data_format &= (uint8_t)(~(0xff));
 	data_format |= (1 << 0 | 1 << 3);
 	prv_adxl345_write(ADXL345_DATA_FORMAT, &data_format, 1);
+  exti_configure_pin(BOARD_CONFIG_ACCEL.accel_ints[0], ExtiTrigger_Rising,
+                     prv_adxl345_interrupt_handler);
 
 	s_adxl345_initialized = true;
 	s_consecutive_errors = 0;
@@ -267,7 +271,10 @@ static void prv_adxl345_init(void) {
 
 
 static uint64_t prv_get_timestamp_ms(void){
-	return 0;
+  time_t time_s;
+  uint16_t time_ms;
+  rtc_get_time_ms(&time_s, &time_ms);
+  return (((uint64_t)time_s) * 1000 + time_ms);
 }
 static void prv_adxl345_chase_target_state(void){
 	if (!s_adxl345_initialized){
@@ -309,8 +316,8 @@ static void prv_adxl345_chase_target_state(void){
 	// Update shake detection
 	if (s_adxl345_state_target.shake_detection_enabled != s_adxl345_state.shake_detection_enabled ||
 			s_adxl345_state_target.shake_sensitivity_high != s_adxl345_state.shake_sensitivity_high){
-		s_adxl345_state_target.shake_detection_enabled = s_adxl345_state.shake_detection_enabled;
-		s_adxl345_state_target.shake_sensitivity_high = s_adxl345_state.shake_sensitivity_high;
+		s_adxl345_state.shake_detection_enabled = s_adxl345_state_target.shake_detection_enabled;
+		s_adxl345_state.shake_sensitivity_high = s_adxl345_state_target.shake_sensitivity_high;
 		prv_adxl345_configure_shake(s_adxl345_state.shake_detection_enabled, s_adxl345_state.shake_sensitivity_high);	
 		update_interrupts = true;
 	}
@@ -318,13 +325,64 @@ static void prv_adxl345_chase_target_state(void){
 	if (s_adxl345_state_target.double_tap_detection_enabled != 
 			s_adxl345_state.double_tap_detection_enabled){
 		prv_adxl345_configure_double_tap(s_adxl345_state_target.double_tap_detection_enabled);
-		s_adxl345_state_target.double_tap_detection_enabled = s_adxl345_state.double_tap_detection_enabled;
+		s_adxl345_state.double_tap_detection_enabled = s_adxl345_state_target.double_tap_detection_enabled;
 		update_interrupts = true;
 	}
 	// Updste smapling interval
-	
+	if (update_interrupts || s_adxl345_state_target.sampling_interval_us != s_adxl345_state.sampling_interval_us){
+		uint32_t requested_interval = s_adxl345_state_target.sampling_interval_us;
+
+		if (s_adxl345_state_target.double_tap_detection_enabled){
+			if (requested_interval == 0){
+				requested_interval = ADXL345_TAP_DETECTION_MAX_INTERVAL_US;
+			} else {
+				requested_interval = MIN(requested_interval,ADXL345_TAP_DETECTION_MAX_INTERVAL_US);
+			}
+		}
+
+		if (s_adxl345_state_target.shake_detection_enabled && requested_interval == 0){
+			requested_interval = 20000;
+		}
+
+		s_adxl345_state.sampling_interval_us = prv_adxl345_set_sampling_interval(requested_interval);
+	}
+	// Update interrupts
+	if (update_interrupts){
+		prv_adxl345_configure_interrupts();
+	}
+
+  PBL_LOG(LOG_LEVEL_DEBUG,
+          "ADXL345: Reached target state: sampling_interval_us=%lu, num_samples=%lu, "
+          "shake_detection_enabled=%d, shake_high_sensitivity=%d, double_tap_detection_enabled=%d",
+          s_adxl345_state.sampling_interval_us, s_adxl345_state.num_samples,
+          s_adxl345_state.shake_detection_enabled, s_adxl345_state.shake_sensitivity_high,
+          s_adxl345_state.double_tap_detection_enabled);
 }
 static void prv_adxl345_configure_interrupts(void){
+	bool should_enable_interrupts = s_adxl345_enabled && (s_adxl345_state.num_samples || s_adxl345_state.shake_detection_enabled || s_adxl345_state.double_tap_detection_enabled);
+
+	exti_disable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+
+	uint8_t int_enable;
+	prv_adxl345_read(ADXL345_INT_ENABLE, &int_enable, 1);
+	if (!should_enable_interrupts){
+		int_enable &= (uint8_t)(~(0xff));
+		prv_adxl345_write(ADXL345_INT_ENABLE, &int_enable, 1);
+		return;
+	}
+
+	// TODO: fifo
+	
+	if (s_adxl345_state.double_tap_detection_enabled){
+		int_enable |= 1 << 5;
+	}
+	if (s_adxl345_state.shake_detection_enabled){
+		int_enable |= 1 << 4;
+	}
+
+	exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+
+	prv_adxl345_write(ADXL345_INT_ENABLE, &int_enable, 1);
 
 }
 static void prv_adxl345_configure_fifo(bool enable){
@@ -334,22 +392,16 @@ static void prv_adxl345_configure_double_tap(bool enable){
 
 }
 static void prv_adxl345_configure_shake(bool enable, bool sensitivity_high){
-	uint8_t act_inact_enable;
-	prv_adxl345_read(ADXL345_ACT_INACT_CTL, &act_inact_enable, 1);
+	uint8_t act_inact_ctl;
+	prv_adxl345_read(ADXL345_ACT_INACT_CTL, &act_inact_ctl, 1);
 
-	uint8_t int_enable;
-	prv_adxl345_read(ADXL345_INT_ENABLE, &int_enable, 1);
 	if (!enable){
-		int_enable &= ~(1 << 4);
-		prv_adxl345_write(ADXL345_INT_ENABLE, &int_enable, 1);
-		act_inact_enable &= ~(1 << 4 | 1 << 5 | 1 << 6);
-		prv_adxl345_write(ADXL345_ACT_INACT_CTL, &act_inact_enable, 1);
+		act_inact_ctl &= ~(1 << 4 | 1 << 5 | 1 << 6);
+		prv_adxl345_write(ADXL345_ACT_INACT_CTL, &act_inact_ctl, 1);
 		return;
 	}
-	int_enable |= (1 << 4);
-	prv_adxl345_write(ADXL345_INT_ENABLE, &int_enable, 1);
-	act_inact_enable |= (1 << 4 | 1 << 5 | 1 << 6);
-	prv_adxl345_write(ADXL345_ACT_INACT_CTL, &act_inact_enable, 1);
+	act_inact_ctl |= (1 << 4 | 1 << 5 | 1 << 6 | 1 << 7);
+	prv_adxl345_write(ADXL345_ACT_INACT_CTL, &act_inact_ctl, 1);
 
 	uint8_t sensitivity = 1;
 	if (sensitivity_high){
@@ -358,16 +410,72 @@ static void prv_adxl345_configure_shake(bool enable, bool sensitivity_high){
 		sensitivity = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdLow];
 	}
 	prv_adxl345_write(ADXL345_THRESH_ACT, &sensitivity, 1);
-
 }
 static void prv_adxl345_interrupt_handler(bool *should_context_switch){
-
+	accel_offload_work_from_isr(prv_adxl345_process_interrupts, should_context_switch);
+	//PBL_LOG(LOG_LEVEL_INFO,"ADXL345: Interrupt");
 }
 static void prv_adxl345_process_interrupts(void){
+	const uint64_t now_ms = prv_get_timestamp_ms();
+	const uint64_t previous_interrupt_ms = s_last_interrupt_ms;
+	s_last_interrupt_ms = now_ms;
+	s_interrupt_count++;
+	s_watchdog_recovery_attempts = 0;
 
+	uint32_t gap_ms = 0;
+	if (previous_interrupt_ms == 0){
+		PBL_LOG(LOG_LEVEL_INFO, "ADXL345: First INT1 service (count=%lu)",(unsigned long)s_interrupt_count);
+	} else {
+		uint64_t raw_gap_ms = now_ms - previous_interrupt_ms;
+		gap_ms = (raw_gap_ms > UINT32_MAX) ? UINT32_MAX : (uint32_t)raw_gap_ms;
+		if (gap_ms >= ADXL345_INTERRUPT_GAP_LOG_THRESHOLD_MS) {
+			PBL_LOG(LOG_LEVEL_INFO, "ADXL345: INT1 gap %lu ms (count=%lu wake=%lu tap=%lu)",
+							(unsigned long)gap_ms, (unsigned long)s_interrupt_count, (unsigned long)s_wake_event_count, (unsigned long)s_double_tap_event_count);
+		}
+	}
+
+	uint8_t int_source;
+	prv_adxl345_read(ADXL345_INT_SOURCE, &int_source, 1);
+	
+	if (int_source & (1 << 4)){
+		if (gap_ms > 400){
+			PBL_LOG(LOG_LEVEL_INFO,"ADXL345: Shake detected");
+			accel_cb_shake_detected(AXIS_Y, 1); //testing
+		}
+	}
 }
 static void prv_adxl345_interrupt_watchdog_callback(void *data){
 
+}
+static int32_t prv_adxl345_set_sampling_interval(uint32_t interval_us){
+	if (!s_adxl345_initialized){
+		PBL_LOG(LOG_LEVEL_ERROR, "ADXL345: Not initialized, cannot set sampling interval");
+		return -1;
+	}
+	if (s_adxl345_state.double_tap_detection_enabled){
+		interval_us = MIN(interval_us, ADXL345_TAP_DETECTION_MAX_INTERVAL_US);
+	}
+	if (s_adxl345_state.shake_detection_enabled){
+		interval_us = MIN(interval_us, 20000);
+	}
+	const uint32_t intervals[16] = {
+        10000000, 5000000, 2500000, 1250000, 625000, 312500, 156250, 
+        78125, 39062, 19531, 9765, 4882, 2441, 1220, 610, 312
+  };
+	uint8_t interval_code = 0;
+	for (int i = 15; i >= 0; i--){
+		if (interval_us >= intervals[i]){
+			interval_code = i;
+			break;
+		}
+	}
+	uint8_t bw_rate;
+	prv_adxl345_read(ADXL345_BW_RATE, &bw_rate, 1);
+	bw_rate &= ~(uint8_t)(0xf);
+	bw_rate |= interval_code;
+	prv_adxl345_write(ADXL345_BW_RATE, &bw_rate, 1);
+	PBL_LOG(LOG_LEVEL_DEBUG, "ADXL345: Set sampling interval to %lu (requested %lu us)",intervals[interval_code],interval_us);
+	return intervals[interval_code];
 }
 static bool prv_adxl345_force_reinit(void){
 	return false;
@@ -398,4 +506,8 @@ static uint8_t prv_adxl345_read_sample(AccelDriverSample *sample){
 	}
 	PBL_LOG(LOG_LEVEL_DEBUG,"ADXL345: Raw data: %hd %hd %hd",accel_raw[0],accel_raw[1],accel_raw[2]);
 	return 0;
+}
+
+bool accel_run_selftest(){
+	return true;
 }

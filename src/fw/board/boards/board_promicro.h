@@ -80,7 +80,7 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
     .axes_inverts[AXIS_Z] = false,
     // This will need calibration.
     .shake_thresholds[AccelThresholdHigh] = 64,
-    .shake_thresholds[AccelThresholdLow] = 0xf,
+    .shake_thresholds[AccelThresholdLow] = 32,
     .double_tap_threshold = 12500, //This already is a good value and does not need calibration.
   // LSM6DSO tap timing register values tuned for reliable double-tap:
   // tap_shock (0-3): maximum duration (in ODR steps) where an over-threshold event is still
@@ -96,10 +96,10 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   // Ideally we would configure both interrupt pins, but we have run out of GPIOTE channels.
   // We will use INT1 (connected to pin 13) for accelerometer interrupts, and leave INT2 (pin 11) unused.
   .accel_int_gpios = {
-    [0] = { .gpio = NRF5_GPIO_RESOURCE_EXISTS, .gpio_pin = NRF_GPIO_PIN_MAP(1, 13) },
+    [0] = { .gpio = NRF5_GPIO_RESOURCE_EXISTS, .gpio_pin = NRF_GPIO_PIN_MAP(0,22) },
   },
   .accel_ints = {
-    [0] = { .peripheral = NRFX_GPIOTE_INSTANCE(0), .channel = 7, .gpio_pin = NRF_GPIO_PIN_MAP(1, 13) },
+    [0] = { .peripheral = NRFX_GPIOTE_INSTANCE(0), .channel = 7, .gpio_pin = NRF_GPIO_PIN_MAP(0,22) },
   },
 };
 
@@ -132,7 +132,7 @@ static const BoardConfigGC9A01Display BOARD_CONFIG_DISPLAY = {
   // NOTE: the clk and mosi pins have to differ from what's on the pebble firmware because P0.06 and P0.08 are occupied on the DK.
   .clk = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0,17),true}, // clock (or scl)
   .mosi = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0,20),true}, // mosi (or sda)
-  .cs = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0,22),true}, // chip select
+  .cs = {NULL}, // chip select (in the case of the ProMicro board, CS is tied to ground and the 022 pin is used as the accelerometer interrupt
   .dc = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0,24),true}, // data/command
   .rst = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1,0),true}, //reset 
   // .extcomin is not defined here because unlike the sharp display,

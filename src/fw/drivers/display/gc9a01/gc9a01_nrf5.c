@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "drivers/display/display.h"
+#include "freertos_types.h"
 #include "gc9a01.h"
 
 #include <stdbool.h>
@@ -14,6 +15,8 @@
 #include "kernel/events.h"
 #include "kernel/util/stop.h"
 #include "os/mutex.h"
+#include "portmacro.h"
+#include "system/logging.h"
 #include "system/passert.h"
 #include "util/reverse.h"
 
@@ -33,9 +36,12 @@
 static uint8_t s_buf[((200*3))];
 static bool s_updating_single_byte;
 static bool s_updating;
+static bool s_display_on = true;
+static uint8_t s_toggling_display = 0;
 static NextRowCallback s_nrcb;
 static UpdateCompleteCallback s_uccb;
 static SemaphoreHandle_t s_sem;
+static PebbleMutex *s_display_mutex;
 
 // watch rotation
 static bool s_rotated_180 = false;
@@ -55,11 +61,16 @@ static inline void prv_disable_spim(void) {
 }
 
 // the gc9a01 cs pin is active low, so we have to reverse these functions
+// these cs functions are not active on ProMicro because i need the cs pin for other things
 static inline void prv_enable_chip_select(void){
+#if !defined(BOARD_PROMICRO)
   gpio_output_set(&BOARD_CONFIG_DISPLAY.cs,false);
+#endif
 }
 static inline void prv_disable_chip_select(void){
+#if !defined(BOARD_PROMICRO)
   gpio_output_set(&BOARD_CONFIG_DISPLAY.cs,true);
+#endif
 }
 // reset is also active low
 static inline void prv_enable_reset(void){
@@ -78,6 +89,7 @@ static inline void prv_select_command_mode(void){
 
 // our functions
 void GC9A01_write_command(uint8_t cmd){
+  s_updating_single_byte = true;
   prv_enable_spim();
   prv_enable_chip_select();
   prv_select_command_mode();
@@ -90,6 +102,7 @@ void GC9A01_write_command(uint8_t cmd){
   prv_disable_spim();
 }
 void GC9A01_write_byte(uint8_t cmd){
+  s_updating_single_byte = true;
   prv_enable_spim();
   prv_enable_chip_select();
   prv_select_data_mode();
@@ -104,6 +117,8 @@ void GC9A01_write_byte(uint8_t cmd){
 
 static void prv_gc9a01_init(void) {
   // All of this is required for the display to be properly initialised. Yeah, I know.
+  // Unfortunately, the bulk of this code is still required for the display to properly run. Annoying, but at least the fw doens't have to black out the GRAM again
+  // and I also get to keep the PebbleOS logo as a side effect! Yay!
   prv_disable_chip_select();
   prv_enable_reset();
   vTaskDelay(pdMS_TO_TICKS(100));
@@ -336,13 +351,15 @@ static void prv_gc9a01_init(void) {
   vTaskDelay(pdMS_TO_TICKS(20));
   GC9A01_write_command(0x53);
   GC9A01_write_byte(0x2C);
+  /*
   GC9A01_write_command(0x2C);
   for (int i = 0; i < 240*240*12/8; i++){
     GC9A01_write_byte(0x00);
   }
+  */
   GC9A01_write_command(0x29);
 
-  //set frame to 216x216. I know this isn't Pebble-compliant code but hey, this is my repo i do whatever i want
+  //set frame to 200x200. I know this isn't Pebble-compliant code but hey, this is my repo i do whatever i want
   uint8_t data[4];
 
   GC9A01_write_command(0x2a);
@@ -359,6 +376,46 @@ static void prv_gc9a01_init(void) {
   for (int i=0;i<4;i++){
     GC9A01_write_byte(data[i]);
   }
+  s_display_on = true;
+}
+
+void gc9a01_toggle_display(bool enable){
+  if (s_updating){
+    s_toggling_display = enable ? 1 : 2;
+    return;
+  }
+  if (enable) {
+    PBL_LOG(LOG_LEVEL_DEBUG,"Display ON");
+    GC9A01_write_command(0x29);
+    s_display_on = true;
+  } else {
+    PBL_LOG(LOG_LEVEL_DEBUG,"Display OFF");
+    GC9A01_write_command(0x28);
+    s_display_on = false;
+  }
+  s_toggling_display = 0;
+  if (enable){
+    uint8_t data[4];
+
+    GC9A01_write_command(0x2a);
+    data[0] = (20 >> 8) & 0xFF;
+    data[1] = 20 & 0xFF;
+    data[2] = (219 >> 8) & 0xFF;
+    data[3] = 219 & 0xFF;
+    for (int i=0;i<4;i++){
+      GC9A01_write_byte(data[i]);
+    }
+
+    GC9A01_write_command(0x2b);
+
+    for (int i=0;i<4;i++){
+      GC9A01_write_byte(data[i]);
+    }
+    PebbleEvent e = {
+      .type = PEBBLE_DISPLAY_ON_EVENT,
+    };
+    event_put(&e);
+  }
 }
 
 static void prv_terminate_single_transfer(void *data) {
@@ -374,8 +431,10 @@ static void prv_terminate_transfer(void *data) {
 
   prv_disable_chip_select();
   prv_disable_spim();
-
+  
   s_uccb();
+
+  if (s_toggling_display) gc9a01_toggle_display(s_toggling_display == 1 ? true : false);
 }
 
 static void prv_transfer_next_row(void *data){
@@ -424,6 +483,7 @@ static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx) {
   portBASE_TYPE woken = pdFALSE;
 
   if (s_updating_single_byte) {
+    /*
     PebbleEvent e = {
         .type = PEBBLE_CALLBACK_EVENT,
         .callback =
@@ -431,8 +491,10 @@ static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx) {
                 .callback = prv_terminate_single_transfer,
             },
     };
-
-    woken = event_put_isr(&e) ? pdTRUE : pdFALSE;
+    */
+    //woken = event_put_isr(&e) ? pdTRUE : pdFALSE;
+    s_updating_single_byte = false;
+    xSemaphoreGiveFromISR(s_sem, &woken);
   } else if (s_updating) {
     PebbleEvent e = {
         .type = PEBBLE_CALLBACK_EVENT,
@@ -460,7 +522,9 @@ void display_init(void) {
   nrfx_err_t err = nrfx_spim_init(&BOARD_CONFIG_DISPLAY.spi, &config, prv_spim_evt_handler, NULL);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
+#if !defined(BOARD_PROMICRO)
   gpio_output_init(&BOARD_CONFIG_DISPLAY.cs, GPIO_OType_PP, GPIO_Speed_50MHz);
+#endif
   gpio_output_init(&BOARD_CONFIG_DISPLAY.dc, GPIO_OType_PP, GPIO_Speed_50MHz);
   gpio_output_init(&BOARD_CONFIG_DISPLAY.rst, GPIO_OType_PP, GPIO_Speed_50MHz);
 
@@ -480,13 +544,17 @@ void display_set_rotated(bool rotated) {
 }
 
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
+  if (s_toggling_display || !s_display_on){
+    uccb();
+    return;
+  }
   PBL_ASSERTN(!s_updating);
   s_uccb = uccb;
   s_nrcb = nrcb;
 
   // write command (write)
-  GC9A01_write_command(DISP_MODE_WRITE);
   s_updating = true;
+  GC9A01_write_command(DISP_MODE_WRITE);
   prv_enable_spim();
   prv_enable_chip_select();
   prv_select_data_mode(); 
@@ -495,6 +563,10 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 
 bool display_update_in_progress(void) {
   return s_updating;
+}
+
+bool display_is_on(void) {
+  return s_display_on;
 }
 
 /* stubs */

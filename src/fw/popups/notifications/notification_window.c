@@ -18,6 +18,7 @@
 #include "applib/ui/window_manager.h"
 #include "applib/ui/window_stack.h"
 #include "apps/system_apps/timeline/peek_layer.h"
+#include "drivers/display/display.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/modals/modal_manager.h"
@@ -76,6 +77,12 @@ T_STATIC NotificationWindowData s_notification_window_data;
 
 static bool s_in_use = false;
 PebbleMutex *s_notification_window_mutex;
+static bool notification_held;
+typedef struct {
+  Uuid id;
+  NotificationType type;
+} HeldNotification;
+HeldNotification held_notification;
 
 static bool prv_should_provide_action_menu_for_item(NotificationWindowData *data,
                                                     const TimelineItem *item);
@@ -1000,7 +1007,9 @@ static void prv_window_appear(Window *window) {
   }
   prv_setup_reminder_watchdog(data);
 
-  prv_refresh_pop_timer(data);
+  if (display_is_on()){
+    prv_refresh_pop_timer(data);
+  }
 
   // update status bar to the current info
   prv_update_status_layer(data);
@@ -1339,21 +1348,45 @@ static void prv_handle_notification_added_common(Uuid *id, NotificationType type
 
     prv_notification_window_add_notification(id, type);
 
-    if (is_new) {
-      data->first_notif_loaded = false;
-      prv_show_peek_for_notification(data, id, true /* is_first_notification */);
-      modal_window_push(&data->window, NOTIFICATION_PRIORITY, true /* animated */);
-    } else if (in_view) {
-      // Only focus the new notification if it becomes the new front of the list.
-      // In DND mode notifications can get inserted into the middle of the list and we don't
-      // want to change focus in this use case
-      if (notifications_presented_list_current() != notifications_presented_list_first()) {
-        const bool should_animate = !do_not_disturb_is_active();
-        notification_window_focus_notification(id, should_animate);
-      } else {
-        // If we are inserting into the middle of this list, just reaload the swap layer so the
-        // number of notifications displayed is correct
-        prv_reload_swap_layer(data);
+    if (!display_is_on()){
+      if (notification_held){
+        if (is_new){
+          data->first_notif_loaded = false;
+          prv_show_peek_for_notification(data, &(held_notification.id), true /* is_first_notification */);
+          modal_window_push(&data->window, NOTIFICATION_PRIORITY, false /* NOT animated */);
+        } else if (in_view){
+          // Only focus the new notification if it becomes the new front of the list.
+          // In DND mode notifications can get inserted into the middle of the list and we don't
+          // want to change focus in this use case
+          if (notifications_presented_list_current() != notifications_presented_list_first()) {
+            notification_window_focus_notification(&(held_notification.id), false);
+          } else {
+            // If we are inserting into the middle of this list, just reaload the swap layer so the
+            // number of notifications displayed is correct
+            prv_reload_swap_layer(data);
+          }
+        }
+      }
+      notification_held = true;
+      held_notification.id = *id;
+      held_notification.type = type;
+    } else {
+      if (is_new) {
+        data->first_notif_loaded = false;
+        prv_show_peek_for_notification(data, id, true /* is_first_notification */);
+        modal_window_push(&data->window, NOTIFICATION_PRIORITY, true /* animated */);
+      } else if (in_view) {
+        // Only focus the new notification if it becomes the new front of the list.
+        // In DND mode notifications can get inserted into the middle of the list and we don't
+        // want to change focus in this use case
+        if (notifications_presented_list_current() != notifications_presented_list_first()) {
+          const bool should_animate = !do_not_disturb_is_active();
+          notification_window_focus_notification(id, should_animate);
+        } else {
+          // If we are inserting into the middle of this list, just reaload the swap layer so the
+          // number of notifications displayed is correct
+          prv_reload_swap_layer(data);
+        }
       }
     }
   }
@@ -1375,10 +1408,15 @@ static void prv_handle_notification_added_common(Uuid *id, NotificationType type
   }
 
   if (alerts_should_enable_backlight_for_type(prv_alert_type_for_notification_type(type))) {
-    light_enable_interaction();
+    //light_enable_interaction();
   }
 
   prv_refresh_pop_timer(data);
+}
+void notification_push_held(void){
+  if (!notification_held) return;
+  prv_handle_notification_added_common(&(held_notification.id), held_notification.type);
+  notification_held = false;
 }
 
 static bool prv_is_item_loaded(Uuid *id) {

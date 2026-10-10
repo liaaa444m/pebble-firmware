@@ -6,7 +6,10 @@
 #if PLATFORM_NRF_DK
 uint32_t battery_convert_reading_to_millivolts(ADCVoltageMonitorReading reading, uint32_t numerator, uint32_t denominator) {
   // This is what I like to call: i have no fucking idea what im doing
-  return reading.vref_total * 3600 * 2 / 4095;
+  return reading.vref_total * 3600 * 2 / 4095 + 150;
+  // What's that 150mV being added for? I don't know how it's like for you guys, but during testing I noticed that the ADC almost always read 100-200mV lower than the battery's actual voltage
+  // which ends up making the firmware think that there's no battery left, which is annoying. I don't know if this will all go away once I make an actual PCB, but that'll be a problem
+  // for summer 2027
 }
 #else
 uint32_t battery_convert_reading_to_millivolts(ADCVoltageMonitorReading reading,
