@@ -164,6 +164,26 @@ static void prv_change_brightness(int32_t new_brightness) {
   s_current_brightness = new_brightness;
 }
 
+static bool prv_light_allowed(void) {
+  if (!s_backlight_allowed) {
+    return false;
+  }
+  
+  if (backlight_is_enabled()) {
+    if (backlight_is_ambient_sensor_enabled()) {
+      // If the light is off and it's bright outside, don't allow the light to turn on
+      // (we don't need it!). Grab the mutex here so that the timer state machine doesn't change
+      // the light brightness while we're checking the ambient light levels.
+      bool allowed = !((s_current_brightness == 0) && ambient_light_is_light());
+      return allowed;
+    } else {
+      return true;
+    }
+  } else {
+    return false;
+  }
+}
+
 static void prv_change_state(BacklightState new_state) {
   BacklightState old_state = s_light_state;
   s_light_state = new_state;
@@ -185,6 +205,7 @@ static void prv_change_state(BacklightState new_state) {
       break;
     case LIGHT_STATE_ON_TIMED:
       new_brightness = prv_backlight_get_intensity();
+      if (prv_light_allowed()) break;
 
       // Schedule the timer to move us from the ON_TIMED state to the ON_FADING state
       new_timer_start(s_timer_id, backlight_get_timeout_ms(),
@@ -220,29 +241,9 @@ static void prv_change_state(BacklightState new_state) {
   }
 }
 
-static bool prv_light_allowed(void) {
-  if (!s_backlight_allowed) {
-    return false;
-  }
-  
-  if (backlight_is_enabled()) {
-    if (backlight_is_ambient_sensor_enabled()) {
-      // If the light is off and it's bright outside, don't allow the light to turn on
-      // (we don't need it!). Grab the mutex here so that the timer state machine doesn't change
-      // the light brightness while we're checking the ambient light levels.
-      bool allowed = !((s_current_brightness == 0) && ambient_light_is_light());
-      return allowed;
-    } else {
-      return true;
-    }
-  } else {
-    return false;
-  }
-}
-
 void light_init(void) {
-  s_light_state = LIGHT_STATE_OFF;
-  s_current_brightness = BACKLIGHT_BRIGHTNESS_OFF;
+  s_light_state = LIGHT_STATE_ON;
+  s_current_brightness = 100;
   s_timer_id = new_timer_create();
   s_num_buttons_down = 0;
   s_user_controlled_state = false;
@@ -252,6 +253,29 @@ void light_init(void) {
   s_mutex = mutex_create();
 }
 
+
+void light_enable(bool enable) {
+  mutex_lock(s_mutex);
+
+  // This function is a bit of a black sheep - it dives in and messes with the normal
+  // flow of the state machine.
+  // We don't actually use it, but it is now documented and used in the SDK, so
+  // I am reluctant to chop it out.
+
+  s_user_controlled_state = enable;
+
+  if (enable) {
+    prv_change_state(LIGHT_STATE_ON);
+  } else if (s_num_buttons_down == 0) {
+    // reset the state if someone calls light_enable(false);
+    // (unless there are buttons pressed, then leave the backlight on)
+    //prv_change_state(LIGHT_STATE_OFF);
+  }
+
+  mutex_unlock(s_mutex);
+}
+
+#if !defined(BOARD_PROMICRO)
 void light_button_pressed(void) {
   mutex_lock(s_mutex);
 
@@ -299,27 +323,6 @@ void light_enable_interaction(void) {
 
   if (prv_light_allowed()) {
     prv_change_state(LIGHT_STATE_ON_TIMED);
-  }
-
-  mutex_unlock(s_mutex);
-}
-
-void light_enable(bool enable) {
-  mutex_lock(s_mutex);
-
-  // This function is a bit of a black sheep - it dives in and messes with the normal
-  // flow of the state machine.
-  // We don't actually use it, but it is now documented and used in the SDK, so
-  // I am reluctant to chop it out.
-
-  s_user_controlled_state = enable;
-
-  if (enable) {
-    prv_change_state(LIGHT_STATE_ON);
-  } else if (s_num_buttons_down == 0) {
-    // reset the state if someone calls light_enable(false);
-    // (unless there are buttons pressed, then leave the backlight on)
-    prv_change_state(LIGHT_STATE_OFF);
   }
 
   mutex_unlock(s_mutex);
@@ -394,6 +397,130 @@ void light_toggle_ambient_sensor_enabled(void) {
   }
   mutex_unlock(s_mutex);
 }
+
+#else
+
+void light_button_pressed(void) {
+  mutex_lock(s_mutex);
+
+  s_num_buttons_down++;
+  if (s_num_buttons_down > 4) {
+    PBL_LOG(LOG_LEVEL_ERROR, "More buttons were pressed than have been released.");
+    s_num_buttons_down = 0;
+  }
+
+  // set the state to be on; releasing buttons will start the timer counting down
+  prv_change_state(LIGHT_STATE_ON);
+
+  mutex_unlock(s_mutex);
+}
+
+void light_button_released(void) {
+  mutex_lock(s_mutex);
+
+  s_num_buttons_down--;
+  if (s_num_buttons_down < 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "More buttons were released than have been pressed.");
+    s_num_buttons_down = 0;
+  }
+
+  if (s_num_buttons_down == 0 &&
+      s_light_state == LIGHT_STATE_ON &&
+      !s_user_controlled_state) {
+    // no more buttons pressed: wait for a bit and then start the fade-out timer
+    prv_change_state(LIGHT_STATE_ON_TIMED);
+  }
+
+  mutex_unlock(s_mutex);
+}
+
+void light_enable_interaction(void) {
+  mutex_lock(s_mutex);
+
+  //if some buttons are held or light_enable is asserted, do nothing
+  if (s_num_buttons_down > 0 || s_light_state == LIGHT_STATE_ON) {
+    mutex_unlock(s_mutex);
+    return;
+  }
+
+  if (!prv_light_allowed()) {
+    prv_change_state(LIGHT_STATE_ON);
+  }
+
+  mutex_unlock(s_mutex);
+}
+
+void light_enable_respect_settings(bool enable) {
+  mutex_lock(s_mutex);
+
+  s_user_controlled_state = enable;
+
+  if (enable) {
+    if (prv_light_allowed()) {
+      prv_change_state(LIGHT_STATE_ON);
+    }
+  } else if (s_num_buttons_down == 0) {
+    //prv_change_state(LIGHT_STATE_OFF);
+  }
+
+  mutex_unlock(s_mutex);
+}
+
+void light_reset_user_controlled(void) {
+  mutex_lock(s_mutex);
+
+  // http://www.youtube.com/watch?v=6t_KgE6Yuqg
+  if (s_user_controlled_state) {
+    s_user_controlled_state = false;
+
+    if (s_num_buttons_down == 0) {
+      //prv_change_state(LIGHT_STATE_OFF);
+    }
+  }
+
+  mutex_unlock(s_mutex);
+}
+
+static void prv_light_reset_to_timed_mode(void) {
+  mutex_lock(s_mutex);
+
+  if (s_user_controlled_state) {
+    s_user_controlled_state = false;
+    if (!prv_light_allowed()) {
+      prv_change_state(LIGHT_STATE_ON_TIMED);
+    }
+  }
+
+  mutex_unlock(s_mutex);
+}
+
+void light_toggle_enabled(void) {
+  mutex_lock(s_mutex);
+
+  backlight_set_enabled(!backlight_is_enabled());
+  if (prv_light_allowed()) {
+    prv_change_state(LIGHT_STATE_ON);
+  } else {
+    prv_change_state(LIGHT_STATE_ON_TIMED);
+  }
+  mutex_unlock(s_mutex);
+}
+
+void light_toggle_ambient_sensor_enabled(void) {
+  mutex_lock(s_mutex);
+  backlight_set_ambient_sensor_enabled(!backlight_is_ambient_sensor_enabled());
+  if (prv_light_allowed() && !ambient_light_is_light()) {
+    prv_change_state(LIGHT_STATE_ON_TIMED);
+  } else {
+    //prv_change_state(LIGHT_STATE_OFF);
+    // FIXME: PBL-24793 There is an edge case of when the backlight has timed off
+    // or you're toggling it from no ambient (always light on buttons) to ambient,
+    // you will see it turn on and immediately off if its bright out
+  }
+  mutex_unlock(s_mutex);
+}
+
+#endif
 
 void light_allow(bool allowed) {
   if (s_backlight_allowed && !allowed) {

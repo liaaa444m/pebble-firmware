@@ -215,7 +215,7 @@ static const int NUM_BACKLIGHT_SUB_ITEMS = CLIP(SettingsDisplayBacklightTimeout 
                                            SettingsDisplayBacklightMode - 1, 0, NumSettingsDisplayItems);
 
 static bool prv_should_show_backlight_sub_items() {
-  return backlight_is_enabled();
+  return true;
 }
 
 uint16_t prv_get_item_from_row(uint16_t row) {  
@@ -292,7 +292,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       break;
 #endif
     case SettingsDisplayBacklightMode:
-      title = i18n_noop("Backlight");
+      title = i18n_noop("Always-on Backlight");
       if (backlight_is_enabled()) {
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
         // Show current backlight percentage when dynamic backlight is enabled
